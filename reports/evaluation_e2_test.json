@@ -61,15 +61,15 @@
   "block_recall": 0.6666666666666666,
   "block_missed": 8,
   "latency_ms": {
-    "mean": 33.07,
-    "p50": 30.44,
-    "p95": 44.99
+    "mean": 30.23,
+    "p50": 27.92,
+    "p95": 41.17
   },
-  "peak_rss_mb": 454.8,
+  "peak_rss_mb": 454.4,
   "env": {
     "torch": "2.15.0+cpu",
     "python": "3.14.2",
-    "git_commit": null
+    "git_commit": "d29eb35"
   },
   "note": "Synthetic-only evaluation on held-out scenario groups; NOT a real-world security benchmark. Test split was never used for model selection."
 }

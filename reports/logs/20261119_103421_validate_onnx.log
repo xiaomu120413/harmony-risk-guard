@@ -1,0 +1,13 @@
+﻿{
+  "samples": 30,
+  "label_distribution": {
+    "CONTINUE": 10,
+    "ASK": 10,
+    "BLOCK": 10
+  },
+  "label_agreement": 1.0,
+  "max_abs_logit_diff": 1.811981201171875e-05,
+  "mean_abs_logit_diff": 5.32e-06
+}
+saved C:\Users\mu\Desktop\code\model\harmony-risk-guard\reports\onnx_parity.json and C:\Users\mu\Desktop\code\model\harmony-risk-guard\tests\golden_cases.jsonl
+ONNX PARITY OK
