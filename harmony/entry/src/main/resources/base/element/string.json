@@ -2,15 +2,15 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "Harmony Risk Guard M2-A probe"
+      "value": "Agent 操作风险评估 · 本地离线"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "MindSpore Lite risk probe"
+      "value": "风险守卫：本地离线操作风险评估"
     },
     {
       "name": "EntryAbility_label",
-      "value": "RiskGuardProbe"
+      "value": "风险守卫"
     }
   ]
 }

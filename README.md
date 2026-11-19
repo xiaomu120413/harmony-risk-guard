@@ -1,7 +1,31 @@
-# Harmony Risk Guard v0.2 — Windows CPU training pipeline (M1)
+# Harmony Risk Guard
 
 风险判别模型：输入「用户指令 + 工具 + 参数 + 上下文」，输出 `CONTINUE / ASK / BLOCK` 建议。
-本仓库为任务书 M1 阶段的工程实现：v0.1 工程修复版 + v0.2 结构化数据。
+本仓库包含：M1 Windows CPU 训练流水线、M2 HarmonyOS PC 端侧部署（产品化应用），
+以及 M3 备选路线调研。
+
+## 产品形态（HarmonyOS PC · v1.0.0）
+
+`harmony/` 是一个可直接构建安装的**风险守卫**应用（2in1 / MateBook Pro 实测）：
+
+| 页面 | 能力 |
+|---|---|
+| 风险评估 | 表单输入（指令/工具/目标/范围/授权/分级/恢复/备份/目的地）→ 三档决策 + 置信度条形图 + 建议 |
+| 历史记录 | 本机持久化最近 20 条评估，支持清空 |
+| 关于 | 应用/模型信息、隐私说明、免责声明、自检入口 |
+| 自检与诊断 | M2-A~F 阶段验证（转换器/真实模型/分词/NAPI/1000 次基准） |
+
+- 完全离线：不申请网络权限，模型（41.2MB MiniRBT-h256）与历史均在本地
+- 单次推理 15–20ms；首次进入自动预热（约 25ms）
+- 使用说明与边界：[docs/product-guide.md](docs/product-guide.md)
+
+| 评估页 | 结果与历史 |
+|---|---|
+| ![assess](docs/evidence/product_assess_waiting.jpeg) | ![result](docs/evidence/product_assess_result.jpeg) |
+
+## 训练流水线（M1）
+
+风险判别模型训练与评测工程：v0.1 工程修复版 + v0.2 结构化数据。
 
 ## P0 修复（相对 v0.1）
 
@@ -90,6 +114,7 @@ python training\predict.py --instruction "整理下载目录" --tool file.delete
 
 ## 相关调研与进展
 
+- [docs/product-guide.md](docs/product-guide.md) — **产品说明 v1.0.0**（界面导览/使用流程/限制）
 - [docs/runbook.md](docs/runbook.md) — M1 全部实测记录、失败案例与复现命令
 - [docs/m2a-probe.md](docs/m2a-probe.md) — **M2-A 实机穿刺 PASS**：ONNX→MindSpore Lite `.ms`
   在鸿蒙 PC（MateBook Pro / API 26）加载执行，logits 与 PyTorch 一致（max |Δ|=4.3e-7）
