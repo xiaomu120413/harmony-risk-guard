@@ -1,0 +1,22 @@
+{
+  "onnx_path": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\risk_guard.onnx",
+  "model_dir": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\finetuned_last2",
+  "split": "test",
+  "samples": 30,
+  "label_agreement": 1.0,
+  "max_abs_logit_diff": 1.811981201171875e-05,
+  "mean_abs_logit_diff": 5.32e-06,
+  "tolerance": 0.01,
+  "label_distribution": {
+    "CONTINUE": 10,
+    "ASK": 10,
+    "BLOCK": 10
+  },
+  "env": {
+    "onnxruntime": "1.32.0",
+    "torch": "2.15.0+cpu",
+    "python": "3.14.2",
+    "git_commit": null
+  },
+  "note": "Numerical tolerance recorded for CPUExecutionProvider fp32; other backends must record their own measured tolerance."
+}

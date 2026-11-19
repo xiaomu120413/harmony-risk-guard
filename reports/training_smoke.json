@@ -1,0 +1,45 @@
+{
+  "experiment": "E1_head",
+  "smoke": true,
+  "config": {
+    "model": "hfl/minirbt-h256",
+    "mode": "head",
+    "epochs": 1,
+    "batch_size": 8,
+    "lr": 0.0005,
+    "threads": 8,
+    "max_length": 128,
+    "seed": 42,
+    "data_dir": "data",
+    "out_dir": null,
+    "class_weights": "balanced",
+    "early_stop_patience": 2,
+    "device": "cpu",
+    "smoke": true
+  },
+  "env": {
+    "torch": "2.15.0+cpu",
+    "python": "3.14.2",
+    "cpu": "Intel64 Family 6 Model 151 Stepping 2, GenuineIntel",
+    "threads": 8,
+    "git_commit": null
+  },
+  "train_rows": 20,
+  "val_rows": 8,
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 1.090364654858907,
+      "val_macro_f1": 0.13333333333333333,
+      "epoch_seconds": 0.4
+    }
+  ],
+  "best_val_macro_f1": 0.13333333333333333,
+  "best_epoch": 1,
+  "unfrozen_layer_params": 0,
+  "trainable_parameters": 771,
+  "total_parameters": 10345987,
+  "elapsed_seconds": 0.48,
+  "peak_rss_mb": 516.9,
+  "out_dir": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\smoke"
+}

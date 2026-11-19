@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+models/
+data/synthetic_v01/
+data/synthetic_v01_backup_*/

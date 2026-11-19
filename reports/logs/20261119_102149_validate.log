@@ -1,0 +1,49 @@
+﻿{
+  "splits": {
+    "train": {
+      "rows": 144,
+      "groups": 18,
+      "unique_ids": 144,
+      "label_dist": {
+        "ASK": 48,
+        "CONTINUE": 64,
+        "BLOCK": 32
+      },
+      "max_instruction_len": 29,
+      "errors": [],
+      "warnings": []
+    },
+    "val": {
+      "rows": 72,
+      "groups": 9,
+      "unique_ids": 72,
+      "label_dist": {
+        "CONTINUE": 24,
+        "BLOCK": 24,
+        "ASK": 24
+      },
+      "max_instruction_len": 25,
+      "errors": [],
+      "warnings": []
+    },
+    "test": {
+      "rows": 72,
+      "groups": 9,
+      "unique_ids": 72,
+      "label_dist": {
+        "BLOCK": 24,
+        "CONTINUE": 24,
+        "ASK": 24
+      },
+      "max_instruction_len": 27,
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "cross_split": {
+    "group_leakage": true
+  }
+}
+errors: 0  warnings: 0
+report saved to C:\Users\mu\Desktop\code\model\harmony-risk-guard\reports\data_quality.json
+VALIDATION OK

@@ -1,0 +1,51 @@
+{
+  "source_model_dir": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\finetuned_last2",
+  "onnx_path": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\risk_guard.onnx",
+  "onnx_bytes": 41470007,
+  "opset": 17,
+  "inputs": [
+    {
+      "name": "input_ids",
+      "shape": [
+        1,
+        128
+      ],
+      "type": "tensor(int64)"
+    },
+    {
+      "name": "attention_mask",
+      "shape": [
+        1,
+        128
+      ],
+      "type": "tensor(int64)"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "logits",
+      "shape": [
+        1,
+        3
+      ],
+      "type": "tensor(float)"
+    }
+  ],
+  "fixed_shape": [
+    1,
+    128
+  ],
+  "smoke_check": {
+    "samples": 3,
+    "label_agreement": 1.0,
+    "max_abs_logit_diff": 1.4781951904296875e-05
+  },
+  "env": {
+    "onnx": "1.23.2",
+    "onnxruntime": "1.32.0",
+    "torch": "2.15.0+cpu",
+    "python": "3.14.2",
+    "git_commit": null
+  },
+  "note": "int64 token-id inputs; MindSpore Lite compatibility is NOT established by this export."
+}

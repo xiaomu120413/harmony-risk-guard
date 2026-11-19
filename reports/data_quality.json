@@ -1,0 +1,60 @@
+{
+  "data_dir": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\data",
+  "splits": {
+    "train": {
+      "rows": 144,
+      "groups": 18,
+      "unique_ids": 144,
+      "label_dist": {
+        "ASK": 48,
+        "CONTINUE": 64,
+        "BLOCK": 32
+      },
+      "max_instruction_len": 29,
+      "errors": [],
+      "warnings": []
+    },
+    "val": {
+      "rows": 72,
+      "groups": 9,
+      "unique_ids": 72,
+      "label_dist": {
+        "CONTINUE": 24,
+        "BLOCK": 24,
+        "ASK": 24
+      },
+      "max_instruction_len": 25,
+      "errors": [],
+      "warnings": []
+    },
+    "test": {
+      "rows": 72,
+      "groups": 9,
+      "unique_ids": 72,
+      "label_dist": {
+        "BLOCK": 24,
+        "CONTINUE": 24,
+        "ASK": 24
+      },
+      "max_instruction_len": 27,
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "git_commit": null,
+  "cross_split": {
+    "group_leakage": true
+  },
+  "errors": [],
+  "warnings": [],
+  "leaky_fields_never_used": [
+    "group_id",
+    "label",
+    "reason",
+    "requires_human_review",
+    "risk_factors",
+    "sample_id",
+    "source_type"
+  ],
+  "note": "Synthetic rule-based data; evaluation on it is NOT a real-world security benchmark. reason field excluded from model input."
+}

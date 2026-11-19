@@ -1,0 +1,75 @@
+{
+  "model_dir": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\finetuned_head",
+  "split": "test",
+  "count": 72,
+  "labels": [
+    "CONTINUE",
+    "ASK",
+    "BLOCK"
+  ],
+  "macro_f1": 0.6892352382548461,
+  "classification_report": {
+    "CONTINUE": {
+      "precision": 1.0,
+      "recall": 0.625,
+      "f1-score": 0.7692307692307693,
+      "support": 24.0
+    },
+    "ASK": {
+      "precision": 0.5333333333333333,
+      "recall": 0.6666666666666666,
+      "f1-score": 0.5925925925925926,
+      "support": 24.0
+    },
+    "BLOCK": {
+      "precision": 0.6666666666666666,
+      "recall": 0.75,
+      "f1-score": 0.7058823529411765,
+      "support": 24.0
+    },
+    "accuracy": 0.6805555555555556,
+    "macro avg": {
+      "precision": 0.7333333333333333,
+      "recall": 0.6805555555555555,
+      "f1-score": 0.6892352382548461,
+      "support": 72.0
+    },
+    "weighted avg": {
+      "precision": 0.7333333333333333,
+      "recall": 0.6805555555555556,
+      "f1-score": 0.689235238254846,
+      "support": 72.0
+    }
+  },
+  "confusion_matrix": [
+    [
+      15,
+      8,
+      1
+    ],
+    [
+      0,
+      16,
+      8
+    ],
+    [
+      0,
+      6,
+      18
+    ]
+  ],
+  "block_recall": 0.75,
+  "block_missed": 6,
+  "latency_ms": {
+    "mean": 32.07,
+    "p50": 29.37,
+    "p95": 49.2
+  },
+  "peak_rss_mb": 453.0,
+  "env": {
+    "torch": "2.15.0+cpu",
+    "python": "3.14.2",
+    "git_commit": null
+  },
+  "note": "Synthetic-only evaluation on held-out scenario groups; NOT a real-world security benchmark. Test split was never used for model selection."
+}

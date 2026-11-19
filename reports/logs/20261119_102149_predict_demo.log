@@ -1,0 +1,23 @@
+﻿{
+  "decision": "ASK",
+  "scores": {
+    "CONTINUE": 7e-05,
+    "ASK": 0.98682,
+    "BLOCK": 0.01311
+  },
+  "backend": "torch:2.15.0+cpu",
+  "input": {
+    "instruction": "濮橀晲绠欓崚鐘绘珟閻劍鍩涢柌宥堫洣鐠у嫭鏋?,
+    "tool": "file.delete",
+    "target": "user_document",
+    "scope": "recursive",
+    "affected_count": 1,
+    "authorization": "ambiguous",
+    "data_classification": "personal",
+    "recoverable": false,
+    "backup_available": false,
+    "destination_trust": "trusted"
+  },
+  "serialized": "鐢ㄦ埛鎸囦护锛氬闀愮畽閸掔娀娅庨悽銊﹀煕闁插秷顩︾挧鍕灐锛涘伐鍏凤細file.delete锛涚洰鏍囷細user_document锛涜寖鍥达細recursive锛涙暟閲忥細1锛涙巿鏉冿細ambiguous锛涙暟鎹垎绾э細personal锛涘彲鎭㈠锛氬惁锛涙湁澶囦唤锛氬惁锛涚洰鐨勫湴淇′换锛歵rusted",
+  "warning": "Experimental model on synthetic data; do not authorize destructive actions based on this prediction. Independent policy checks must run regardless and fail closed when uncertain."
+}

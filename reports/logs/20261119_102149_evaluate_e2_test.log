@@ -1,0 +1,32 @@
+﻿{
+  "model_dir": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\finetuned_last2",
+  "split": "test",
+  "count": 72,
+  "macro_f1": 0.7777777777777777,
+  "block_recall": 0.6666666666666666,
+  "block_missed": 8,
+  "confusion_matrix": [
+    [
+      24,
+      0,
+      0
+    ],
+    [
+      0,
+      16,
+      8
+    ],
+    [
+      0,
+      8,
+      16
+    ]
+  ],
+  "latency_ms": {
+    "mean": 33.07,
+    "p50": 30.44,
+    "p95": 44.99
+  },
+  "peak_rss_mb": 454.8
+}
+saved C:\Users\mu\Desktop\code\model\harmony-risk-guard\reports\evaluation_e2_test.json

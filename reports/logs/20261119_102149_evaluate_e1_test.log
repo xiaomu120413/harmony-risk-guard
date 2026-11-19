@@ -1,0 +1,32 @@
+﻿{
+  "model_dir": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\finetuned_head",
+  "split": "test",
+  "count": 72,
+  "macro_f1": 0.6892352382548461,
+  "block_recall": 0.75,
+  "block_missed": 6,
+  "confusion_matrix": [
+    [
+      15,
+      8,
+      1
+    ],
+    [
+      0,
+      16,
+      8
+    ],
+    [
+      0,
+      6,
+      18
+    ]
+  ],
+  "latency_ms": {
+    "mean": 32.07,
+    "p50": 29.37,
+    "p95": 49.2
+  },
+  "peak_rss_mb": 453.0
+}
+saved C:\Users\mu\Desktop\code\model\harmony-risk-guard\reports\evaluation_e1_test.json
