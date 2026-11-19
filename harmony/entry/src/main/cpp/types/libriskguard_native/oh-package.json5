@@ -1,0 +1,6 @@
+{
+  "name": "libriskguard_native.so",
+  "types": "./index.d.ts",
+  "version": "1.0.0",
+  "description": "MindSpore Lite native inference (M2-D)"
+}

@@ -97,6 +97,8 @@ python training\predict.py --instruction "整理下载目录" --tool file.delete
   （41.5MB）实机推理 load 24ms / infer 17ms，logits max |Δ|=7.4e-6，标签一致
 - [docs/m2c-tokenizer.md](docs/m2c-tokenizer.md) — **M2-C Tokenizer PASS**：纯 ArkTS WordPiece
   端侧实现，30/30 golden cases token IDs 与 HuggingFace 一致
+- [docs/m2d-native.md](docs/m2d-native.md) — **M2-D Native PASS**：NAPI + MindSpore Lite C API
+  实机推理 17ms/次，logits max |Δ|=7.4e-6（Context 必须加 CPU DeviceInfo）
 - [harmony/](harmony/) — 可构建的 HarmonyOS 工程（ArkTS + MindSporeLiteKit + 探针模型）
 - [docs/cann-local-lm-spike.md](docs/cann-local-lm-spike.md) — M3 备选路线（CANN 端侧 LLM 转换）穿刺：
   WSL2 上 Qwen3.5-0.8B → epair 导出成功（2.0GB），KirinX90 omc 编译被算子覆盖硬阻（含证据）

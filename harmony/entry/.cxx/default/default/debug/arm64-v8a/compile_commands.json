@@ -1,0 +1,8 @@
+[
+{
+  "directory": "C:/Users/mu/Desktop/code/model/harmony-risk-guard/harmony/entry/.cxx/default/default/debug/arm64-v8a",
+  "command": "C:\\PROGRA~1\\Huawei\\DEVECO~1\\sdk\\default\\OPENHA~1\\native\\llvm\\bin\\CLANG_~1.EXE --target=aarch64-linux-ohos --gcc-toolchain=\"C:/Program Files/Huawei/DevEco Studio/sdk/default/openharmony/native/llvm\" --sysroot=\"C:/Program Files/Huawei/DevEco Studio/sdk/default/openharmony/native/sysroot\" -Driskguard_native_EXPORTS -I\"C:/Program Files/Huawei/DevEco Studio/sdk/default/hms/native/sysroot/usr/include\" -fdata-sections -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -fno-addrsig -Wa,--noexecstack -Wformat -Werror=format-security   -D__MUSL__ -O0 -g -fno-limit-debug-info  -std=gnu++17 -fPIC -o CMakeFiles\\riskguard_native.dir\\riskguard_native.cpp.o -c C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\harmony\\entry\\src\\main\\cpp\\riskguard_native.cpp",
+  "file": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\harmony\\entry\\src\\main\\cpp\\riskguard_native.cpp",
+  "output": "CMakeFiles\\riskguard_native.dir\\riskguard_native.cpp.o"
+}
+]

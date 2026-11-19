@@ -7,6 +7,7 @@ import {
 } from '../model/GoldenData';
 import { TOKENIZER_CASES } from '../model/TokenizerGolden';
 import { BertTokenizer } from '../model/BertTokenizer';
+import { loadModel, loadModelFromBuffer, diagnose, predict } from 'libriskguard_native.so';
 
 const TAG: string = 'RiskGuardProbe';
 // M2-A probe: PyTorch CPU reference for the 4-16-3 MLP (seed=42)
@@ -29,6 +30,11 @@ struct Index {
   @State private tokStatus: string = 'pending';
   @State private tokOk: boolean = false;
   @State private tokDetail: string = '';
+  @State private ndStatus: string = 'pending';
+  @State private ndOk: boolean = false;
+  @State private ndLogits: string = '-';
+  @State private ndDiff: string = '-';
+  @State private ndDetail: string = '';
 
   aboutToAppear(): void {
     this.runAll();
@@ -185,11 +191,64 @@ struct Index {
     }
   }
 
+  private async runNative(ctx: common.UIAbilityContext): Promise<void> {
+    try {
+      const raw: Uint8Array = await ctx.resourceManager.getRawFileContent('risk_guard.ms');
+      const t0: number = Date.now();
+      // Diagnostics: two models x (buffer|file) x (threadNum|default)
+      const mlpRaw: Uint8Array = await ctx.resourceManager.getRawFileContent('probe_mlp.ms');
+      const diagPath: string = await this.copyRawToSandbox(ctx, 'risk_guard.ms');
+      const dMlp: number[] = diagnose(mlpRaw, diagPath);
+      const dRg: number[] = diagnose(raw, diagPath);
+      hilog.info(0x0000, TAG, 'ND_DIAG mlp=%{public}s rg=%{public}s',
+        JSON.stringify(dMlp), JSON.stringify(dRg));
+      // Prefer loading from memory; fall back to file-path build if needed.
+      let status: number = loadModelFromBuffer(raw);
+      let mode: string = 'buffer';
+      if (status !== 0) {
+        status = loadModel(diagPath);
+        mode = 'file';
+      }
+      const loadMs: number = Date.now() - t0;
+      if (status !== 0) {
+        throw new Error('load status=' + status + ' (' + mode + ')');
+      }
+      const t1: number = Date.now();
+      const logits: number[] = predict(RG_INPUT_IDS, RG_ATTENTION_MASK);
+      const inferMs: number = Date.now() - t1;
+      if (logits === null || logits === undefined) {
+        throw new Error('predict returned null');
+      }
+      let text: string = '';
+      let worst: number = 0;
+      for (let i = 0; i < logits.length; i++) {
+        text += (i > 0 ? ', ' : '') + logits[i].toFixed(6);
+        const d = Math.abs(logits[i] - RG_PT_LOGITS[i]);
+        if (d > worst) {
+          worst = d;
+        }
+      }
+      this.ndLogits = text;
+      this.ndDiff = worst.toExponential(3);
+      this.ndOk = worst < 1e-2;
+      this.ndStatus = this.ndOk ? 'M2-D PASS' : 'M2-D MISMATCH';
+      this.ndDetail = 'native C API | ' + mode + ' | load=' + loadMs + 'ms infer=' + inferMs + 'ms';
+      hilog.info(0x0000, TAG, 'ND_OK logits=[%{public}s] maxdiff=%{public}s %{public}s',
+        text, this.ndDiff, this.ndDetail);
+    } catch (err) {
+      this.ndOk = false;
+      this.ndStatus = 'M2-D FAILED';
+      this.ndLogits = (err as Error).message;
+      hilog.error(0x0000, TAG, 'ND_FAIL %{public}s', (err as Error).message);
+    }
+  }
+
   private async runAll(): Promise<void> {
     const ctx = getContext(this) as common.UIAbilityContext;
     await this.runMlp(ctx);
     await this.runRiskGuard(ctx);
     await this.runTokenizer(ctx);
+    await this.runNative(ctx);
   }
 
   build() {
@@ -225,6 +284,15 @@ struct Index {
           .fontSize(16)
           .fontColor(this.tokOk ? '#1B7F3A' : '#B3261E')
         Text(this.tokDetail).fontSize(13)
+
+        Text('— M2-D: Native NAPI (C API) —').fontSize(16)
+          .fontWeight(FontWeight.Medium).margin({ top: 12 })
+        Text(this.ndStatus)
+          .fontSize(16)
+          .fontColor(this.ndOk ? '#1B7F3A' : '#B3261E')
+        Text('logits: ' + this.ndLogits).fontSize(13)
+        Text('max |Δ| vs PyTorch: ' + this.ndDiff).fontSize(13)
+        Text(this.ndDetail).fontSize(12).fontColor('#666666')
       }
       .padding(24)
       .width('100%')

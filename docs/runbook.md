@@ -112,7 +112,10 @@ Set-ExecutionPolicy -Scope Process Bypass
 3. ~~M2-C Tokenizer~~ ✅ **已完成（2026-11-19）**：纯 ArkTS WordPiece 端侧实现，
    30/30 golden cases token IDs 与 HuggingFace 完全一致（修复 UTF-8 词表解码 bug）。
    详见 [m2c-tokenizer.md](m2c-tokenizer.md)，截图 [evidence](evidence/m2c_all_probes_pass.jpeg)。
-4. M2-D Native：NAPI + `libmindspore_lite_ndk.so` C++ 推理路径（当前为 ArkTS API）。
+4. ~~M2-D Native~~ ✅ **已完成（2026-11-19）**：NAPI + MindSpore Lite C API 实机推理成功
+   （17ms/次，logits max|Δ|=7.387e-6）。关键根因：C API 的 Context 必须显式添加
+   CPU DeviceInfo，且重建模型时 context 必须成对重建。详见 [m2d-native.md](m2d-native.md)，
+   截图 [evidence](evidence/m2d_native_pass.jpeg)。
 5. M2-E UI：输入指令/上下文 → 三类分数 + 决策 + 策略提示；M2-F 基准（1000 次/冷启动）。
 6. 反事实数据工程（任务书第 5 节）：denied×file.delete 等授权翻转对，重训并复测 case3.4。
 
