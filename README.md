@@ -95,6 +95,8 @@ python training\predict.py --instruction "整理下载目录" --tool file.delete
   在鸿蒙 PC（MateBook Pro / API 26）加载执行，logits 与 PyTorch 一致（max |Δ|=4.3e-7）
 - [docs/m2b-real-model.md](docs/m2b-real-model.md) — **M2-B 真实模型 PASS**：MiniRBT 分类器
   （41.5MB）实机推理 load 24ms / infer 17ms，logits max |Δ|=7.4e-6，标签一致
+- [docs/m2c-tokenizer.md](docs/m2c-tokenizer.md) — **M2-C Tokenizer PASS**：纯 ArkTS WordPiece
+  端侧实现，30/30 golden cases token IDs 与 HuggingFace 一致
 - [harmony/](harmony/) — 可构建的 HarmonyOS 工程（ArkTS + MindSporeLiteKit + 探针模型）
 - [docs/cann-local-lm-spike.md](docs/cann-local-lm-spike.md) — M3 备选路线（CANN 端侧 LLM 转换）穿刺：
   WSL2 上 Qwen3.5-0.8B → epair 导出成功（2.0GB），KirinX90 omc 编译被算子覆盖硬阻（含证据）

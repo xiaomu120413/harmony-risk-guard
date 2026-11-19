@@ -5,6 +5,8 @@ import { common } from '@kit.AbilityKit';
 import {
   RG_SAMPLE_ID, RG_INPUT_IDS, RG_ATTENTION_MASK, RG_PT_LOGITS, RG_PT_LABEL, RG_LABELS
 } from '../model/GoldenData';
+import { TOKENIZER_CASES } from '../model/TokenizerGolden';
+import { BertTokenizer } from '../model/BertTokenizer';
 
 const TAG: string = 'RiskGuardProbe';
 // M2-A probe: PyTorch CPU reference for the 4-16-3 MLP (seed=42)
@@ -24,6 +26,9 @@ struct Index {
   @State private rgDiff: string = '-';
   @State private rgLabel: string = '-';
   @State private rgDetail: string = '';
+  @State private tokStatus: string = 'pending';
+  @State private tokOk: boolean = false;
+  @State private tokDetail: string = '';
 
   aboutToAppear(): void {
     this.runAll();
@@ -140,10 +145,51 @@ struct Index {
     }
   }
 
+  private async runTokenizer(ctx: common.UIAbilityContext): Promise<void> {
+    try {
+      const vocabBytes: Uint8Array = await ctx.resourceManager.getRawFileContent('vocab.txt');
+      const tok = BertTokenizer.load(vocabBytes);
+      let matched: number = 0;
+      let firstBad: string = '';
+      for (let c = 0; c < TOKENIZER_CASES.length; c++) {
+        const item = TOKENIZER_CASES[c];
+        const ids: number[] = tok.encode(item.text);
+        let same: boolean = ids.length === item.ids.length;
+        if (same) {
+          for (let i = 0; i < ids.length; i++) {
+            if (ids[i] !== item.ids[i]) {
+              same = false;
+              if (firstBad.length === 0) {
+                firstBad = item.id + ' @' + i + ' got=' + ids[i] + ' want=' + item.ids[i];
+              }
+              break;
+            }
+          }
+        } else if (firstBad.length === 0) {
+          firstBad = item.id + ' length ' + ids.length + ' vs ' + item.ids.length;
+        }
+        if (same) {
+          matched++;
+        }
+      }
+      this.tokOk = matched === TOKENIZER_CASES.length;
+      this.tokStatus = this.tokOk ? 'M2-C PASS' : 'M2-C MISMATCH';
+      this.tokDetail = matched + '/' + TOKENIZER_CASES.length + ' cases match' +
+        (firstBad.length > 0 ? ' | first: ' + firstBad : '');
+      hilog.info(0x0000, TAG, 'TOK_DONE %{public}s', this.tokDetail);
+    } catch (err) {
+      this.tokOk = false;
+      this.tokStatus = 'M2-C FAILED';
+      this.tokDetail = (err as Error).message;
+      hilog.error(0x0000, TAG, 'TOK_FAIL %{public}s', (err as Error).message);
+    }
+  }
+
   private async runAll(): Promise<void> {
     const ctx = getContext(this) as common.UIAbilityContext;
     await this.runMlp(ctx);
     await this.runRiskGuard(ctx);
+    await this.runTokenizer(ctx);
   }
 
   build() {
@@ -172,6 +218,13 @@ struct Index {
         Text('label: ' + this.rgLabel).fontSize(13)
         Text('max |Δ| vs PyTorch: ' + this.rgDiff).fontSize(13)
         Text(this.rgDetail).fontSize(12).fontColor('#666666')
+
+        Text('— M2-C: Tokenizer (WordPiece) —').fontSize(16)
+          .fontWeight(FontWeight.Medium).margin({ top: 12 })
+        Text(this.tokStatus)
+          .fontSize(16)
+          .fontColor(this.tokOk ? '#1B7F3A' : '#B3261E')
+        Text(this.tokDetail).fontSize(13)
       }
       .padding(24)
       .width('100%')

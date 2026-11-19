@@ -109,7 +109,9 @@ Set-ExecutionPolicy -Scope Process Bypass
    实机 load 24ms / infer 17ms，logits max |Δ|=7.387e-6，标签一致（BLOCK）；
    converter 自动把 int64 输入降为 int32（端侧自适应填充）。详见
    [m2b-real-model.md](m2b-real-model.md)，截图 [evidence](evidence/m2b_real_model_pass.jpeg)。
-3. M2-C：用 30 条 golden cases 做端侧 tokenizer 一致性（vocab.txt + WordPiece）。
+3. ~~M2-C Tokenizer~~ ✅ **已完成（2026-11-19）**：纯 ArkTS WordPiece 端侧实现，
+   30/30 golden cases token IDs 与 HuggingFace 完全一致（修复 UTF-8 词表解码 bug）。
+   详见 [m2c-tokenizer.md](m2c-tokenizer.md)，截图 [evidence](evidence/m2c_all_probes_pass.jpeg)。
 4. M2-D Native：NAPI + `libmindspore_lite_ndk.so` C++ 推理路径（当前为 ArkTS API）。
 5. M2-E UI：输入指令/上下文 → 三类分数 + 决策 + 策略提示；M2-F 基准（1000 次/冷启动）。
 6. 反事实数据工程（任务书第 5 节）：denied×file.delete 等授权翻转对，重训并复测 case3.4。
