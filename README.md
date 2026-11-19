@@ -93,6 +93,8 @@ python training\predict.py --instruction "整理下载目录" --tool file.delete
 - [docs/runbook.md](docs/runbook.md) — M1 全部实测记录、失败案例与复现命令
 - [docs/m2a-probe.md](docs/m2a-probe.md) — **M2-A 实机穿刺 PASS**：ONNX→MindSpore Lite `.ms`
   在鸿蒙 PC（MateBook Pro / API 26）加载执行，logits 与 PyTorch 一致（max |Δ|=4.3e-7）
+- [docs/m2b-real-model.md](docs/m2b-real-model.md) — **M2-B 真实模型 PASS**：MiniRBT 分类器
+  （41.5MB）实机推理 load 24ms / infer 17ms，logits max |Δ|=7.4e-6，标签一致
 - [harmony/](harmony/) — 可构建的 HarmonyOS 工程（ArkTS + MindSporeLiteKit + 探针模型）
 - [docs/cann-local-lm-spike.md](docs/cann-local-lm-spike.md) — M3 备选路线（CANN 端侧 LLM 转换）穿刺：
   WSL2 上 Qwen3.5-0.8B → epair 导出成功（2.0GB），KirinX90 omc 编译被算子覆盖硬阻（含证据）

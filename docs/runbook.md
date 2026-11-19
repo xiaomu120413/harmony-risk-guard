@@ -105,10 +105,14 @@ Set-ExecutionPolicy -Scope Process Bypass
    鸿蒙 PC（MateBook Pro / API 26）MindSpore Lite 运行时加载执行成功，
    logits 与 PyTorch 一致（max |Δ|=4.292e-7）。详见 [m2a-probe.md](m2a-probe.md)，
    工程见 [../harmony/](../harmony/)，截图 [evidence](evidence/m2a_probe_pass.jpeg)。
-2. M2-B：`risk_guard.onnx`（MiniRBT，int64 [1,128]）→ `.ms`，核验 Embedding/Attention/
-   LayerNorm 算子；失败则记录最小失败算子清单并降级（int32 输入/静态 shape）。
-3. M2-C：用 `tests/golden_cases.jsonl` 做端侧 tokenizer 一致性。
-4. 反事实数据工程（任务书第 5 节）：denied×file.delete 等授权翻转对，重训并复测 case3.4。
+2. ~~M2-B 真实模型~~ ✅ **已完成（2026-11-19）**：`risk_guard.onnx`（41.5MB）一次转换成功，
+   实机 load 24ms / infer 17ms，logits max |Δ|=7.387e-6，标签一致（BLOCK）；
+   converter 自动把 int64 输入降为 int32（端侧自适应填充）。详见
+   [m2b-real-model.md](m2b-real-model.md)，截图 [evidence](evidence/m2b_real_model_pass.jpeg)。
+3. M2-C：用 30 条 golden cases 做端侧 tokenizer 一致性（vocab.txt + WordPiece）。
+4. M2-D Native：NAPI + `libmindspore_lite_ndk.so` C++ 推理路径（当前为 ArkTS API）。
+5. M2-E UI：输入指令/上下文 → 三类分数 + 决策 + 策略提示；M2-F 基准（1000 次/冷启动）。
+6. 反事实数据工程（任务书第 5 节）：denied×file.delete 等授权翻转对，重训并复测 case3.4。
 
 ## 6. 备选路线调研：cann-local-lm（M3 生成式模型方向）
 

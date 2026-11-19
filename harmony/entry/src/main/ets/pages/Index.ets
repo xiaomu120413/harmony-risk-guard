@@ -2,98 +2,181 @@ import { mindSporeLite } from '@kit.MindSporeLiteKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import { fileIo } from '@kit.CoreFileKit';
 import { common } from '@kit.AbilityKit';
+import {
+  RG_SAMPLE_ID, RG_INPUT_IDS, RG_ATTENTION_MASK, RG_PT_LOGITS, RG_PT_LABEL, RG_LABELS
+} from '../model/GoldenData';
 
 const TAG: string = 'RiskGuardProbe';
-// PyTorch CPU reference for the same weights (scripts/make_probe_mlp.py, seed=42)
-const GOLDEN: number[] = [0.161677, -0.013502, -0.003518];
-const SAMPLE: number[] = [0.1, 0.2, 0.3, 0.4];
+// M2-A probe: PyTorch CPU reference for the 4-16-3 MLP (seed=42)
+const MLP_GOLDEN: number[] = [0.161677, -0.013502, -0.003518];
+const MLP_SAMPLE: number[] = [0.1, 0.2, 0.3, 0.4];
 
 @Entry
 @Component
 struct Index {
-  @State private status: string = 'running...';
-  @State private ok: boolean = false;
-  @State private modelBytes: number = 0;
-  @State private logits: string = '-';
-  @State private maxDiff: string = '-';
-  @State private detail: string = '';
+  @State private mlpStatus: string = 'pending';
+  @State private mlpOk: boolean = false;
+  @State private mlpLogits: string = '-';
+  @State private mlpDiff: string = '-';
+  @State private rgStatus: string = 'pending';
+  @State private rgOk: boolean = false;
+  @State private rgLogits: string = '-';
+  @State private rgDiff: string = '-';
+  @State private rgLabel: string = '-';
+  @State private rgDetail: string = '';
 
   aboutToAppear(): void {
-    this.runProbe();
+    this.runAll();
   }
 
-  private async runProbe(): Promise<void> {
-    try {
-      const ctx = getContext(this) as common.UIAbilityContext;
-      // 1) copy rawfile probe_mlp.ms into the app sandbox
-      const raw: Uint8Array = await ctx.resourceManager.getRawFileContent('probe_mlp.ms');
-      this.modelBytes = raw.byteLength;
-      const path: string = ctx.filesDir + '/probe_mlp.ms';
-      const file = fileIo.openSync(path,
-        fileIo.OpenMode.CREATE | fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.TRUNC);
-      fileIo.writeSync(file.fd, raw.buffer);
-      fileIo.closeSync(file);
-      hilog.info(0x0000, TAG, 'model copied: %{public}d bytes -> %{public}s', raw.byteLength, path);
+  private async copyRawToSandbox(ctx: common.UIAbilityContext, name: string): Promise<string> {
+    const raw: Uint8Array = await ctx.resourceManager.getRawFileContent(name);
+    const path: string = ctx.filesDir + '/' + name;
+    const file = fileIo.openSync(path,
+      fileIo.OpenMode.CREATE | fileIo.OpenMode.READ_WRITE | fileIo.OpenMode.TRUNC);
+    fileIo.writeSync(file.fd, raw.buffer);
+    fileIo.closeSync(file);
+    return path;
+  }
 
-      // 2) load model with MindSpore Lite
+  // Fill an integer tensor from token ids, honoring the tensor's actual dtype.
+  private fillIntTensor(t: mindSporeLite.MSTensor, ids: number[]): number {
+    const is64: boolean = t.dtype === mindSporeLite.DataType.NUMBER_TYPE_INT64;
+    const width: number = is64 ? 8 : 4;
+    const buf = new ArrayBuffer(ids.length * width);
+    const view = new DataView(buf);
+    for (let i = 0; i < ids.length; i++) {
+      if (is64) {
+        view.setInt32(i * 8, ids[i], true);      // low 32 bits (ids < 2^31)
+        view.setInt32(i * 8 + 4, 0, true);       // high 32 bits
+      } else {
+        view.setInt32(i * 4, ids[i], true);
+      }
+    }
+    t.setData(buf);
+    return width;
+  }
+
+  private async runMlp(ctx: common.UIAbilityContext): Promise<void> {
+    try {
+      const path: string = await this.copyRawToSandbox(ctx, 'probe_mlp.ms');
       const model = await mindSporeLite.loadModelFromFile(path);
       const inputs = model.getInputs();
-      this.detail = 'inputs=' + inputs.length + ' name=' + inputs[0].name +
-        ' shape=' + JSON.stringify(inputs[0].shape);
-      hilog.info(0x0000, TAG, 'MODEL_LOADED %{public}s', this.detail);
-
-      // 3) fixed sample input -> predict
-      const x = new Float32Array(SAMPLE);
+      const x = new Float32Array(MLP_SAMPLE);
       inputs[0].setData(x.buffer);
       const outputs = await model.predict(inputs);
-      const out = outputs[0];
-      const values = new Float32Array(out.getData());
-
+      const values = new Float32Array(outputs[0].getData());
       let text: string = '';
       let worst: number = 0;
       for (let i = 0; i < values.length; i++) {
         text += (i > 0 ? ', ' : '') + values[i].toFixed(6);
-        const d = Math.abs(values[i] - GOLDEN[i]);
+        const d = Math.abs(values[i] - MLP_GOLDEN[i]);
         if (d > worst) {
           worst = d;
         }
       }
-      this.logits = text;
-      this.maxDiff = worst.toExponential(3);
-      this.ok = worst < 1e-3;
-      this.status = this.ok ? 'M2-A PROBE PASS' : 'M2-A PROBE MISMATCH';
-      hilog.info(0x0000, TAG, 'PROBE_OK logits=[%{public}s] maxdiff=%{public}s',
-        text, this.maxDiff);
+      this.mlpLogits = text;
+      this.mlpDiff = worst.toExponential(3);
+      this.mlpOk = worst < 1e-3;
+      this.mlpStatus = this.mlpOk ? 'M2-A PASS' : 'M2-A MISMATCH';
+      hilog.info(0x0000, TAG, 'MLP_OK logits=[%{public}s] maxdiff=%{public}s',
+        text, this.mlpDiff);
     } catch (err) {
-      const e = err as Error;
-      this.ok = false;
-      this.status = 'M2-A PROBE FAILED';
-      this.logits = '-';
-      this.detail = e.message;
-      hilog.error(0x0000, TAG, 'PROBE_FAIL %{public}s', e.message);
+      this.mlpOk = false;
+      this.mlpStatus = 'M2-A FAILED';
+      this.mlpLogits = (err as Error).message;
+      hilog.error(0x0000, TAG, 'MLP_FAIL %{public}s', (err as Error).message);
     }
   }
 
-  build() {
-    Column({ space: 10 }) {
-      Text('Harmony Risk Guard · M2-A Probe')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-        .margin({ bottom: 8 })
-      Text(this.status)
-        .fontSize(18)
-        .fontWeight(FontWeight.Medium)
-        .fontColor(this.ok ? '#1B7F3A' : '#B3261E')
-      Text('model: probe_mlp.ms (' + this.modelBytes + ' bytes)').fontSize(14)
-      Text('input: [0.1, 0.2, 0.3, 0.4]').fontSize(14)
-      Text('logits: ' + this.logits).fontSize(14)
-      Text('expected(logits): 0.161677, -0.013502, -0.003518').fontSize(14).fontColor('#666666')
-      Text('max |Δ| vs PyTorch: ' + this.maxDiff).fontSize(14)
-      Text(this.detail).fontSize(12).fontColor('#666666')
+  private async runRiskGuard(ctx: common.UIAbilityContext): Promise<void> {
+    try {
+      const path: string = await this.copyRawToSandbox(ctx, 'risk_guard.ms');
+      const t0: number = Date.now();
+      const model = await mindSporeLite.loadModelFromFile(path);
+      const loadMs: number = Date.now() - t0;
+      const inputs = model.getInputs();
+      if (inputs.length < 2) {
+        throw new Error('expected 2 inputs, got ' + inputs.length);
+      }
+      const w0: number = this.fillIntTensor(inputs[0], RG_INPUT_IDS);
+      const w1: number = this.fillIntTensor(inputs[1], RG_ATTENTION_MASK);
+      this.rgDetail = 'inputs=' + inputs.length +
+        ' dtype0=' + inputs[0].dtype + '/' + w0 + 'B' +
+        ' dtype1=' + inputs[1].dtype + '/' + w1 + 'B' +
+        ' load=' + loadMs + 'ms';
+
+      const t1: number = Date.now();
+      const outputs = await model.predict(inputs);
+      const inferMs: number = Date.now() - t1;
+      const values = new Float32Array(outputs[0].getData());
+      let text: string = '';
+      let worst: number = 0;
+      let argmax: number = 0;
+      for (let i = 0; i < values.length; i++) {
+        text += (i > 0 ? ', ' : '') + values[i].toFixed(6);
+        const d = Math.abs(values[i] - RG_PT_LOGITS[i]);
+        if (d > worst) {
+          worst = d;
+        }
+        if (values[i] > values[argmax]) {
+          argmax = i;
+        }
+      }
+      this.rgLogits = text;
+      this.rgLabel = RG_LABELS[argmax] + ' (pt=' + RG_PT_LABEL + ')';
+      this.rgDiff = worst.toExponential(3);
+      this.rgOk = worst < 1e-2;
+      this.rgStatus = this.rgOk ? 'M2-B PASS' : 'M2-B MISMATCH';
+      this.rgDetail = this.rgDetail + ' infer=' + inferMs + 'ms';
+      hilog.info(0x0000, TAG,
+        'RG_OK sample=%{public}s logits=[%{public}s] label=%{public}s maxdiff=%{public}s load=%{public}dms infer=%{public}dms %{public}s',
+        RG_SAMPLE_ID, text, this.rgLabel, this.rgDiff, loadMs, inferMs, this.rgDetail);
+    } catch (err) {
+      this.rgOk = false;
+      this.rgStatus = 'M2-B FAILED';
+      this.rgLogits = (err as Error).message;
+      hilog.error(0x0000, TAG, 'RG_FAIL %{public}s', (err as Error).message);
     }
-    .padding(24)
+  }
+
+  private async runAll(): Promise<void> {
+    const ctx = getContext(this) as common.UIAbilityContext;
+    await this.runMlp(ctx);
+    await this.runRiskGuard(ctx);
+  }
+
+  build() {
+    Scroll() {
+      Column({ space: 8 }) {
+        Text('Harmony Risk Guard · M2 Probe')
+          .fontSize(22)
+          .fontWeight(FontWeight.Bold)
+          .margin({ bottom: 6 })
+
+        Text('— M2-A: MLP 4-16-3 —').fontSize(16).fontWeight(FontWeight.Medium)
+        Text(this.mlpStatus)
+          .fontSize(16)
+          .fontColor(this.mlpOk ? '#1B7F3A' : '#B3261E')
+        Text('logits: ' + this.mlpLogits).fontSize(13)
+        Text('max |Δ| vs PyTorch: ' + this.mlpDiff).fontSize(13)
+
+        Text('— M2-B: MiniRBT risk classifier —').fontSize(16)
+          .fontWeight(FontWeight.Medium).margin({ top: 12 })
+        Text(this.rgStatus)
+          .fontSize(16)
+          .fontColor(this.rgOk ? '#1B7F3A' : '#B3261E')
+        Text('sample: ' + RG_SAMPLE_ID).fontSize(13)
+        Text('logits: ' + this.rgLogits).fontSize(13)
+        Text('expected: ' + RG_PT_LOGITS.join(', ')).fontSize(13).fontColor('#666666')
+        Text('label: ' + this.rgLabel).fontSize(13)
+        Text('max |Δ| vs PyTorch: ' + this.rgDiff).fontSize(13)
+        Text(this.rgDetail).fontSize(12).fontColor('#666666')
+      }
+      .padding(24)
+      .width('100%')
+    }
     .width('100%')
     .height('100%')
-    .justifyContent(FlexAlign.Center)
   }
 }
