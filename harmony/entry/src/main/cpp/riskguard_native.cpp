@@ -169,7 +169,7 @@ static napi_value LoadModel(napi_env env, napi_callback_info info)
         OH_AI_ContextDestroy(&g_ctx);
         g_ctx = nullptr;
     }
-    if (!EnsureContext(2, false)) {
+    if (!EnsureContext(4, false)) {
         napi_value err = nullptr;
         napi_create_int32(env, -1000, &err);
         return err;
@@ -227,7 +227,7 @@ static napi_value LoadModelFromBuffer(napi_env env, napi_callback_info info)
         OH_AI_ContextDestroy(&g_ctx);
         g_ctx = nullptr;
     }
-    if (!EnsureContext(2, false)) {
+    if (!EnsureContext(4, false)) {
         napi_value err = nullptr;
         napi_create_int32(env, -1003, &err);
         return err;
@@ -419,7 +419,7 @@ static napi_value LoadModelWithBackend(napi_env env, napi_callback_info info)
         OH_AI_ContextDestroy(&g_ctx);
         g_ctx = nullptr;
     }
-    if (!EnsureContext(2, useNpu)) {
+    if (!EnsureContext(4, useNpu)) {
         napi_create_int32(env, -1003, &result);
         return result;
     }
@@ -440,7 +440,7 @@ static napi_value LoadModelWithBackend(napi_env env, napi_callback_info info)
     g_model = nullptr;
     OH_AI_ContextDestroy(&g_ctx);
     g_ctx = nullptr;
-    if (!EnsureContext(2, false)) {
+    if (!EnsureContext(4, false)) {
         napi_create_int32(env, -1004, &result);
         return result;
     }
@@ -450,6 +450,82 @@ static napi_value LoadModelWithBackend(napi_env env, napi_callback_info info)
         LOGI("CPU fallback build status=%{public}d actual=%{public}s",
              static_cast<int>(st2), g_backendDesc.c_str());
     }
+    napi_create_int32(env, static_cast<int32_t>(st), &result);
+    return result;
+}
+
+// Build from buffer with explicit CPU tuning: thread count and operator parallelism.
+static napi_value LoadModelFromBufferCfg(napi_env env, napi_callback_info info)
+{
+    size_t argc = 3;
+    napi_value argv[3] = {nullptr, nullptr, nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    void *data = nullptr;
+    size_t len = 0;
+    bool isAb = false;
+    napi_is_arraybuffer(env, argv[0], &isAb);
+    if (isAb) {
+        napi_get_arraybuffer_info(env, argv[0], &data, &len);
+    } else {
+        bool isTa = false;
+        napi_is_typedarray(env, argv[0], &isTa);
+        if (isTa) {
+            napi_typedarray_type type;
+            size_t length = 0;
+            void *td = nullptr;
+            napi_value ab = nullptr;
+            size_t offset = 0;
+            napi_get_typedarray_info(env, argv[0], &type, &length, &td, &ab, &offset);
+            data = td;
+            len = length;
+        }
+    }
+    int32_t threads = 2;
+    bool parallel = false;
+    if (argc >= 2) {
+        napi_get_value_int32(env, argv[1], &threads);
+    }
+    if (argc >= 3) {
+        napi_get_value_bool(env, argv[2], &parallel);
+    }
+    napi_value result = nullptr;
+    if (data == nullptr || len == 0) {
+        napi_create_int32(env, -1002, &result);
+        return result;
+    }
+    if (g_model != nullptr) {
+        OH_AI_ModelDestroy(&g_model);
+        g_model = nullptr;
+    }
+    if (g_ctx != nullptr) {
+        OH_AI_ContextDestroy(&g_ctx);
+        g_ctx = nullptr;
+    }
+    g_ctx = OH_AI_ContextCreate();
+    if (g_ctx == nullptr) {
+        napi_create_int32(env, -1003, &result);
+        return result;
+    }
+    OH_AI_DeviceInfoHandle cpu = OH_AI_DeviceInfoCreate(OH_AI_DEVICETYPE_CPU);
+    if (cpu == nullptr) {
+        napi_create_int32(env, -1003, &result);
+        return result;
+    }
+    OH_AI_ContextAddDeviceInfo(g_ctx, cpu);
+    if (threads > 0) {
+        OH_AI_ContextSetThreadNum(g_ctx, threads);
+    }
+    OH_AI_ContextSetEnableParallel(g_ctx, parallel);
+    g_backendDesc = "CPU (threads=" + std::to_string(threads) +
+        ", parallel=" + (parallel ? "true" : "false") + ")";
+    g_model = OH_AI_ModelCreate();
+    if (g_model == nullptr) {
+        napi_create_int32(env, -1003, &result);
+        return result;
+    }
+    OH_AI_Status st = OH_AI_ModelBuild(g_model, data, len, OH_AI_MODELTYPE_MINDIR, g_ctx);
+    LOGI("LoadModelFromBufferCfg threads=%{public}d parallel=%{public}d status=%{public}d",
+         threads, parallel ? 1 : 0, static_cast<int>(st));
     napi_create_int32(env, static_cast<int32_t>(st), &result);
     return result;
 }
@@ -530,6 +606,7 @@ static napi_value Init(napi_env env, napi_value exports)
         {"loadModel", nullptr, LoadModel, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"loadModelFromBuffer", nullptr, LoadModelFromBuffer, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"loadModelWithBackend", nullptr, LoadModelWithBackend, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"loadModelFromBufferCfg", nullptr, LoadModelFromBufferCfg, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"diagnose", nullptr, Diagnose, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"inferenceBackend", nullptr, InferenceBackend, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"availableAccelerators", nullptr, AvailableAccelerators, nullptr, nullptr, nullptr, napi_default, nullptr},

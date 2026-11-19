@@ -1,6 +1,7 @@
 export const loadModel: (path: string) => number;
 export const loadModelFromBuffer: (buffer: ArrayBuffer | Uint8Array) => number;
 export const loadModelWithBackend: (buffer: ArrayBuffer | Uint8Array, backend: string) => number;
+export const loadModelFromBufferCfg: (buffer: ArrayBuffer | Uint8Array, threads: number, parallel: boolean) => number;
 export const diagnose: (buffer: ArrayBuffer | Uint8Array, path: string) => number[];
 export const predict: (ids: number[], mask: number[]) => number[];
 export const inferenceBackend: () => string;

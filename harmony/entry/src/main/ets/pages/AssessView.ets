@@ -85,6 +85,11 @@ export struct AssessView {
   }
 
   private async preload(): Promise<void> {
+    // Skip preloading during headless autotest launches (single-load processes).
+    if (AppStorage.get<string>('autotestMode') !== undefined) {
+      this.modelState = '自检模式';
+      return;
+    }
     try {
       const ctx = getContext(this) as common.UIAbilityContext;
       await RiskGuardService.get().ensureReady(ctx);

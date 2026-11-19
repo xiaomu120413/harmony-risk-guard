@@ -1,7 +1,8 @@
 import { common } from '@kit.AbilityKit';
 import { hilog } from '@kit.PerformanceAnalysisKit';
 import {
-  loadModelWithBackend, predict, inferenceBackend, availableAccelerators
+  loadModelWithBackend, loadModelFromBuffer, loadModelFromBufferCfg, predict,
+  inferenceBackend, availableAccelerators
 } from 'libriskguard_native.so';
 import { RiskGuardService, AssessInput } from './RiskGuardService';
 import { RG_INPUT_IDS, RG_ATTENTION_MASK, RG_PT_LOGITS } from '../model/GoldenData';
@@ -93,13 +94,50 @@ async function runAssessMatrix(ctx: common.UIAbilityContext): Promise<void> {
   }
 }
 
-export async function runAutoTest(ctx: common.UIAbilityContext, mode: string): Promise<void> {
-  hilog.info(0x0000, TAG, 'START mode=%{public}s', mode);
+async function runPerfOnce(ctx: common.UIAbilityContext, threads: number, parallel: boolean): Promise<void> {
+  try {
+    const modelBytes: Uint8Array = await ctx.resourceManager.getRawFileContent('risk_guard.ms');
+    const st: number = loadModelFromBufferCfg(modelBytes, threads, parallel);
+    if (st !== 0) {
+      hilog.warn(0x0000, TAG, 'PERF threads=%{public}d parallel=%{public}d load_fail=%{public}d',
+        threads, parallel ? 1 : 0, st);
+      return;
+    }
+    predict(RG_INPUT_IDS, RG_ATTENTION_MASK);
+    predict(RG_INPUT_IDS, RG_ATTENTION_MASK);
+    const times: number[] = [];
+    for (let i = 0; i < 30; i++) {
+      const t0: number = Date.now();
+      predict(RG_INPUT_IDS, RG_ATTENTION_MASK);
+      times.push(Date.now() - t0);
+    }
+    times.sort((a: number, b: number) => a - b);
+    let sum: number = 0;
+    for (let i = 0; i < times.length; i++) {
+      sum += times[i];
+    }
+    hilog.info(0x0000, TAG,
+      'PERF threads=%{public}d parallel=%{public}d avg=%{public}dms p50=%{public}dms min=%{public}dms',
+      threads, parallel ? 1 : 0, Math.round(sum / times.length),
+      times[Math.floor(times.length / 2)], times[0]);
+  } catch (err) {
+    hilog.error(0x0000, TAG, 'PERF_FAIL %{public}s', (err as Error).message);
+  }
+}
+
+export async function runAutoTest(ctx: common.UIAbilityContext, mode: string,
+  threads: number, parallel: boolean): Promise<void> {
+  hilog.info(0x0000, TAG, 'START mode=%{public}s threads=%{public}d parallel=%{public}d',
+    mode, threads, parallel ? 1 : 0);
   if (mode === 'npu' || mode === 'all') {
     await runNpu(ctx);
   }
   if (mode === 'assess' || mode === 'all') {
     await runAssessMatrix(ctx);
+  }
+  if (mode === 'perf') {
+    // One config per process: repeated ModelDestroy in MS Lite 2.7 NDK can double-free.
+    await runPerfOnce(ctx, threads > 0 ? threads : 2, parallel);
   }
   hilog.info(0x0000, TAG, 'DONE mode=%{public}s', mode);
 }

@@ -67,7 +67,25 @@ equal to the inference engine version.
 （`CONVERT RESULT SUCCESS:0`），替换 rawfile 后版本警告消失，CPU 推理数值与 2.11 产物
 逐位一致（决策/分数/latency 不变）。
 
-## 5. 复现
+## 5. CPU 调优实测（可执行方案）
+
+`loadModelFromBufferCfg` 支持线程数/算子并行配置；无头测试每组 30 次推理（独立进程）：
+
+| 线程 | 并行 | avg | p50 | min |
+|---|---|---|---|---|
+| 2 | off/on | 15ms | 15ms | 14ms |
+| **4** | off/on | **9ms** | 9ms | 8ms |
+| **8** | off/on | **9ms** | **8ms** | **6ms** |
+
+结论：**4–8 线程比默认 2 线程快约 40%**；`SetEnableParallel` 影响很小。产品默认已改为
+**4 线程**（9ms 级别，兼顾 UI 线程竞争）。8 线程可作为高负载场景选项。
+
+工程注意：MS Lite 2.7.0 NDK 桥在**同进程重复 `OH_AI_ModelDestroy` 后重建**时会出现
+double free（崩溃栈：`OH_AI_ModelDestroy → LiteSession::~LiteSession → Tensor::FreeData`，
+SIGTRAP）。因此性能对比采用"一组配置一个进程"（`--ps autotest perf --pi threads N`），
+产品路径保持单次加载，不受影响。
+
+## 6. 复现
 
 ```bash
 # 无头自检（不依赖 UI 焦点，适合 CI/远程）
@@ -81,7 +99,7 @@ hdc shell "aa start -a EntryAbility -b com.zcode.riskguard --ps autotest assess"
 #   RiskGuardNative: available NNRT devices: ...
 ```
 
-## 6. 若未来要走 NPU
+## 7. 若未来要走 NPU
 
 1. 以企业主体通过华为接口人申请 **DLSA 模型认证**（模型级认证，非应用签名）
 2. 使用厂商 HiAI/OM 预编译链路生成"第三方模型"包（Custom 节点 + OM 缓冲），或等运行时
