@@ -88,8 +88,11 @@ python training\predict.py --instruction "整理下载目录" --tool file.delete
 - 模型输出只是风险建议：权限检查、不可恢复删除、凭据外发必须有独立策略引擎兜底，
   不确定时 fail closed。禁止将本模型作为高危操作的唯一闸门。
 
-## 相关调研
+## 相关调研与进展
 
 - [docs/runbook.md](docs/runbook.md) — M1 全部实测记录、失败案例与复现命令
+- [docs/m2a-probe.md](docs/m2a-probe.md) — **M2-A 实机穿刺 PASS**：ONNX→MindSpore Lite `.ms`
+  在鸿蒙 PC（MateBook Pro / API 26）加载执行，logits 与 PyTorch 一致（max |Δ|=4.3e-7）
+- [harmony/](harmony/) — 可构建的 HarmonyOS 工程（ArkTS + MindSporeLiteKit + 探针模型）
 - [docs/cann-local-lm-spike.md](docs/cann-local-lm-spike.md) — M3 备选路线（CANN 端侧 LLM 转换）穿刺：
   WSL2 上 Qwen3.5-0.8B → epair 导出成功（2.0GB），KirinX90 omc 编译被算子覆盖硬阻（含证据）

@@ -1,0 +1,21 @@
+{
+  "input_name": "input",
+  "input_shape": [
+    1,
+    4
+  ],
+  "input_values": [
+    0.10000000149011612,
+    0.20000000298023224,
+    0.30000001192092896,
+    0.4000000059604645
+  ],
+  "output_name": "logits",
+  "expected_logits": [
+    0.161677,
+    -0.013502,
+    -0.003518
+  ],
+  "expected_argmax": 0,
+  "note": "PyTorch CPU reference for MindSpore Lite on-device parity (M2-A)."
+}

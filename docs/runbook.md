@@ -99,12 +99,16 @@ Set-ExecutionPolicy -Scope Process Bypass
 | M1-08 ORT 对齐 | `reports/onnx_parity.json`：30 条（10/10/10），标签一致率 100%，max diff 1.8e-5；`tests/golden_cases.jsonl` 供 M2 复用 | ✅ |
 | M1-09 性能/复现 | 训练/评测报告内含 seed、git commit、峰值 RSS、P50/P95；本文档复现命令 | ✅ |
 
-## 5. 下一步（M2-A 前置，未执行）
+## 5. 下一步（M2 进度）
 
-1. 反事实数据工程（任务书第 5 节）：denied×file.delete 等授权翻转对，重训并复测 case3.4。
-2. M2-A 最小穿刺：简单 MLP ONNX → MindSpore Lite `.ms` → 鸿蒙 Native，
-   需先确认鸿蒙 PC 型号 / HarmonyOS 版本 / DevEco SDK 版本（任务书第 20 节待确认项）。
-3. golden_cases.jsonl（30 条 token IDs + 双端 logits）作为三端 tokenizer/runtime parity 基准。
+1. ~~M2-A 最小穿刺~~ ✅ **已完成（2026-11-19）**：ONNX→`.ms` 转换器可用 +
+   鸿蒙 PC（MateBook Pro / API 26）MindSpore Lite 运行时加载执行成功，
+   logits 与 PyTorch 一致（max |Δ|=4.292e-7）。详见 [m2a-probe.md](m2a-probe.md)，
+   工程见 [../harmony/](../harmony/)，截图 [evidence](evidence/m2a_probe_pass.jpeg)。
+2. M2-B：`risk_guard.onnx`（MiniRBT，int64 [1,128]）→ `.ms`，核验 Embedding/Attention/
+   LayerNorm 算子；失败则记录最小失败算子清单并降级（int32 输入/静态 shape）。
+3. M2-C：用 `tests/golden_cases.jsonl` 做端侧 tokenizer 一致性。
+4. 反事实数据工程（任务书第 5 节）：denied×file.delete 等授权翻转对，重训并复测 case3.4。
 
 ## 6. 备选路线调研：cann-local-lm（M3 生成式模型方向）
 

@@ -1,0 +1,8 @@
+{
+  "modelVersion": "6.0.2",
+  "description": "Harmony Risk Guard M2: on-device risk classifier probe",
+  "dependencies": {
+  },
+  "devDependencies": {
+  }
+}

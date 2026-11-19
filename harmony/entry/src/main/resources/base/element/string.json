@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "Harmony Risk Guard M2-A probe"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "MindSpore Lite risk probe"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "RiskGuardProbe"
+    }
+  ]
+}
