@@ -69,9 +69,9 @@ static std::vector<AccelInfo> FindAccelerators()
 }
 
 // Standard MindSpore Lite C API setup: a context must carry a device info.
-// useNpu=true selects an NNRT accelerator (Kirin NPU); falls back to CPU
-// automatically when no accelerator is usable.
-static bool EnsureContext(int threadNum, bool useNpu)
+// npuMode: 0=CPU, 1=NNRT accel (HIAI_F first), 2=NNRT online (NPU_ first),
+//          3=KIRIN_NPU device type, 4=KIRIN_NPU + CPU (heterogeneous).
+static bool EnsureContext(int threadNum, int npuMode)
 {
     if (g_ctx != nullptr) {
         return true;
@@ -81,8 +81,41 @@ static bool EnsureContext(int threadNum, bool useNpu)
         LOGE("ContextCreate failed");
         return false;
     }
-    if (useNpu) {
+    if (npuMode == 3 || npuMode == 4) {
+        OH_AI_DeviceInfoHandle npu = OH_AI_DeviceInfoCreate(OH_AI_DEVICETYPE_KIRIN_NPU);
+        if (npu != nullptr) {
+            OH_AI_DeviceInfoSetPerformanceMode(npu, OH_AI_PERFORMANCE_HIGH);
+            OH_AI_ContextAddDeviceInfo(g_ctx, npu);
+            g_backendDesc = "KIRIN_NPU (device type)";
+            LOGI("KIRIN_NPU device info added");
+            if (npuMode == 4) {
+                OH_AI_DeviceInfoHandle cpu = OH_AI_DeviceInfoCreate(OH_AI_DEVICETYPE_CPU);
+                if (cpu != nullptr) {
+                    OH_AI_ContextAddDeviceInfo(g_ctx, cpu);
+                    g_backendDesc += " + CPU";
+                    LOGI("CPU device info added after KIRIN_NPU");
+                }
+            }
+            if (threadNum > 0) {
+                OH_AI_ContextSetThreadNum(g_ctx, threadNum);
+            }
+            return true;
+        }
+        LOGE("KIRIN_NPU device info unavailable");
+    }
+    if (npuMode == 1 || npuMode == 2) {
         std::vector<AccelInfo> accels = FindAccelerators();
+        if (npuMode == 2) {
+            std::vector<AccelInfo> online;
+            for (size_t i = 0; i < accels.size(); i++) {
+                if (accels[i].name.rfind("NPU_", 0) == 0) {
+                    online.push_back(accels[i]);
+                }
+            }
+            if (!online.empty()) {
+                accels = online;
+            }
+        }
         if (!accels.empty()) {
             const AccelInfo &pick = accels[0];
             OH_AI_DeviceInfoHandle npu = OH_AI_CreateNNRTDeviceInfoByName(pick.name.c_str());
@@ -169,7 +202,7 @@ static napi_value LoadModel(napi_env env, napi_callback_info info)
         OH_AI_ContextDestroy(&g_ctx);
         g_ctx = nullptr;
     }
-    if (!EnsureContext(4, false)) {
+    if (!EnsureContext(4, 0)) {
         napi_value err = nullptr;
         napi_create_int32(env, -1000, &err);
         return err;
@@ -227,7 +260,7 @@ static napi_value LoadModelFromBuffer(napi_env env, napi_callback_info info)
         OH_AI_ContextDestroy(&g_ctx);
         g_ctx = nullptr;
     }
-    if (!EnsureContext(4, false)) {
+    if (!EnsureContext(4, 0)) {
         napi_value err = nullptr;
         napi_create_int32(env, -1003, &err);
         return err;
@@ -257,7 +290,7 @@ static OH_AI_Status TryBuild(void *data, size_t len, const char *path, bool from
         OH_AI_ContextDestroy(&g_ctx);
         g_ctx = nullptr;
     }
-    if (!EnsureContext(threadNum, false)) {
+    if (!EnsureContext(threadNum, 0)) {
         return OH_AI_STATUS_LITE_NULLPTR;
     }
     g_model = OH_AI_ModelCreate();
@@ -405,7 +438,16 @@ static napi_value LoadModelWithBackend(napi_env env, napi_callback_info info)
     if (argc >= 2) {
         GetStringArg(env, argv[1], &backend);
     }
-    bool useNpu = (backend == "npu");
+    int npuMode = 0;
+    if (backend == "npu") {
+        npuMode = 1;
+    } else if (backend == "online") {
+        npuMode = 2;
+    } else if (backend == "kirin") {
+        npuMode = 3;
+    } else if (backend == "kirin_het") {
+        npuMode = 4;
+    }
     napi_value result = nullptr;
     if (data == nullptr || len == 0) {
         napi_create_int32(env, -1002, &result);
@@ -419,7 +461,7 @@ static napi_value LoadModelWithBackend(napi_env env, napi_callback_info info)
         OH_AI_ContextDestroy(&g_ctx);
         g_ctx = nullptr;
     }
-    if (!EnsureContext(4, useNpu)) {
+    if (!EnsureContext(4, npuMode)) {
         napi_create_int32(env, -1003, &result);
         return result;
     }
@@ -440,7 +482,7 @@ static napi_value LoadModelWithBackend(napi_env env, napi_callback_info info)
     g_model = nullptr;
     OH_AI_ContextDestroy(&g_ctx);
     g_ctx = nullptr;
-    if (!EnsureContext(4, false)) {
+    if (!EnsureContext(4, 0)) {
         napi_create_int32(env, -1004, &result);
         return result;
     }

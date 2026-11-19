@@ -16,6 +16,8 @@ export default class EntryAbility extends UIAbility {
       const mode: string = String(params['autotest']);
       let threads: number = 0;
       let parallel: boolean = false;
+      let variant: string = '';
+      let modelFile: string = '';
       if (params['threads'] !== undefined) {
         const n: number = parseInt(String(params['threads']), 10);
         threads = isNaN(n) ? 0 : n;
@@ -23,13 +25,19 @@ export default class EntryAbility extends UIAbility {
       if (params['parallel'] !== undefined) {
         parallel = String(params['parallel']) === 'true' || String(params['parallel']) === '1';
       }
+      if (params['variant'] !== undefined) {
+        variant = String(params['variant']);
+      }
+      if (params['modelfile'] !== undefined) {
+        modelFile = String(params['modelfile']);
+      }
       // Suppress the UI's own model preload so perf runs measure a single load.
       AppStorage.setOrCreate<string>('autotestMode', mode);
       hilog.info(0x0000, TAG, 'autotest hook: mode=%{public}s threads=%{public}d parallel=%{public}d',
         mode, threads, parallel ? 1 : 0);
       const ctx = this.context;
       setTimeout(() => {
-        runAutoTest(ctx, mode, threads, parallel);
+        runAutoTest(ctx, mode, threads, parallel, variant, modelFile);
       }, 800);
     }
   }

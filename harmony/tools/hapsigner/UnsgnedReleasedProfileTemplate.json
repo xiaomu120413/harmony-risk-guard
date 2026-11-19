@@ -1,0 +1,19 @@
+{
+  "version-name": "1.0.0",
+  "version-code": 1,
+  "uuid": "fe686e1b-3770-4824-a938-961b140a7c98",
+  "app-distribution-type": "os_integration",
+  "validity": {
+    "not-before": 1577836800,
+    "not-after": 1893456000
+  },
+  "type": "release",
+  "bundle-info": {
+    "developer-id": "OpenHarmony",
+    "distribution-certificate": "-----BEGIN CERTIFICATE-----\nMIIB9zCCAZugAwIBAgIEK1hGhjAMBggqhkjOPQQDAgUAMGgxCzAJBgNVBAYTAkNO\nMRQwEgYDVQQKEwtPcGVuSGFybW9ueTEZMBcGA1UECxMQT3Blbkhhcm1vbnkgVGVh\nbTEoMCYGA1UEAxMfT3Blbkhhcm1vbnkgQXBwbGljYXRpb24gUmVsZWFzZTAeFw0y\nMTAyMDIxMjE5MTBaFw00OTEyMzExMjE5MTBaMGgxCzAJBgNVBAYTAkNOMRQwEgYD\nVQQKEwtPcGVuSGFybW9ueTEZMBcGA1UECxMQT3Blbkhhcm1vbnkgVGVhbTEoMCYG\nA1UEAxMfT3Blbkhhcm1vbnkgQXBwbGljYXRpb24gUmVsZWFzZTBZMBMGByqGSM49\nAgEGCCqGSM49AwEHA0IABNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5e\nbE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBOjMTAvMA4GA1UdDwEB/wQE\nAwIHgDAdBgNVHQ4EFgQU+3Gu6GVxEFCwl3Bxmou72g1RWBowDAYIKoZIzj0EAwIF\nAANIADBFAiB43g1DrhD95TPpbkeaVPZLVJg0GbrJIVoBXM08eevBPAIhALeHrnW5\nXZp7sykrmn5utdV8Op1nY91R2f26+YVLn4oD\n-----END CERTIFICATE-----\n",
+    "bundle-name": "com.zcode.riskguard",
+    "apl": "normal",
+    "app-feature": "hos_normal_app"
+  },
+  "issuer": "pki_internal"
+}

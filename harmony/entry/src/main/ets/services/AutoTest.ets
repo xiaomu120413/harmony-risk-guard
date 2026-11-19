@@ -9,17 +9,22 @@ import { RG_INPUT_IDS, RG_ATTENTION_MASK, RG_PT_LOGITS } from '../model/GoldenDa
 
 const TAG: string = 'RiskGuardAutoTest';
 
-async function runNpu(ctx: common.UIAbilityContext): Promise<void> {
+async function runNpu(ctx: common.UIAbilityContext, backendName: string, modelFile: string): Promise<void> {
   try {
-    const modelBytes: Uint8Array = await ctx.resourceManager.getRawFileContent('risk_guard.ms');
+    const modelBytes: Uint8Array = await ctx.resourceManager.getRawFileContent(modelFile);
     const accel: string = availableAccelerators();
     hilog.info(0x0000, TAG, 'ACCEL %{public}s', accel);
-    const status: number = loadModelWithBackend(modelBytes, 'npu');
+    const status: number = loadModelWithBackend(modelBytes, backendName);
     const backend: string = inferenceBackend();
-    hilog.info(0x0000, TAG, 'NPU_LOAD status=%{public}d backend=%{public}s', status, backend);
+    hilog.info(0x0000, TAG, 'NPU_LOAD variant=%{public}s status=%{public}d backend=%{public}s', backendName, status, backend);
     if (status !== 0) {
-      hilog.info(0x0000, TAG, 'AUTOTEST NPU_UNAVAILABLE status=%{public}d backend=%{public}s',
-        status, backend);
+      hilog.info(0x0000, TAG, 'AUTOTEST NPU_UNAVAILABLE file=%{public}s status=%{public}d backend=%{public}s',
+        modelFile, status, backend);
+      return;
+    }
+    if (modelFile !== 'risk_guard.ms') {
+      hilog.info(0x0000, TAG, 'AUTOTEST NPU_BUILD_OK file=%{public}s backend=%{public}s (probe model, skip predict)',
+        modelFile, backend);
       return;
     }
     // warmup + 3 runs
@@ -126,11 +131,11 @@ async function runPerfOnce(ctx: common.UIAbilityContext, threads: number, parall
 }
 
 export async function runAutoTest(ctx: common.UIAbilityContext, mode: string,
-  threads: number, parallel: boolean): Promise<void> {
+  threads: number, parallel: boolean, variant: string, modelFile: string): Promise<void> {
   hilog.info(0x0000, TAG, 'START mode=%{public}s threads=%{public}d parallel=%{public}d',
     mode, threads, parallel ? 1 : 0);
   if (mode === 'npu' || mode === 'all') {
-    await runNpu(ctx);
+    await runNpu(ctx, variant.length > 0 ? variant : 'npu', modelFile.length > 0 ? modelFile : 'risk_guard.ms');
   }
   if (mode === 'assess' || mode === 'all') {
     await runAssessMatrix(ctx);
