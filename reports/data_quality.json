@@ -41,7 +41,7 @@
       "warnings": []
     }
   },
-  "git_commit": null,
+  "git_commit": "a41efd0",
   "cross_split": {
     "group_leakage": true
   },

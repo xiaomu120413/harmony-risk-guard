@@ -1,0 +1,364 @@
+Data regeneration skipped (default). Working v0.2 splits in data\ are static inputs.
+WINNER by val macro-F1: models\finetuned_last2 (E1=0.7020833333333334 E2=0.8704453441295547)
+RUN: training\validate_dataset.py --data-dir data
+{
+  "splits": {
+    "train": {
+      "rows": 144,
+      "groups": 18,
+      "unique_ids": 144,
+      "label_dist": {
+        "ASK": 48,
+        "CONTINUE": 64,
+        "BLOCK": 32
+      },
+      "max_instruction_len": 29,
+      "errors": [],
+      "warnings": []
+    },
+    "val": {
+      "rows": 72,
+      "groups": 9,
+      "unique_ids": 72,
+      "label_dist": {
+        "CONTINUE": 24,
+        "BLOCK": 24,
+        "ASK": 24
+      },
+      "max_instruction_len": 25,
+      "errors": [],
+      "warnings": []
+    },
+    "test": {
+      "rows": 72,
+      "groups": 9,
+      "unique_ids": 72,
+      "label_dist": {
+        "BLOCK": 24,
+        "CONTINUE": 24,
+        "ASK": 24
+      },
+      "max_instruction_len": 27,
+      "errors": [],
+      "warnings": []
+    }
+  },
+  "cross_split": {
+    "group_leakage": true
+  }
+}
+errors: 0  warnings: 0
+report saved to C:\Users\mu\Desktop\code\model\harmony-risk-guard\reports\data_quality.json
+VALIDATION OK
+RUN: training\baseline.py --data-dir data
+{
+  "val": {
+    "count": 72,
+    "macro_f1": 0.8857142857142858,
+    "classification_report": {
+      "CONTINUE": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 24.0
+      },
+      "ASK": {
+        "precision": 0.75,
+        "recall": 1.0,
+        "f1-score": 0.8571428571428571,
+        "support": 24.0
+      },
+      "BLOCK": {
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "f1-score": 0.8,
+        "support": 24.0
+      },
+      "accuracy": 0.8888888888888888,
+      "macro avg": {
+        "precision": 0.9166666666666666,
+        "recall": 0.8888888888888888,
+        "f1-score": 0.8857142857142858,
+        "support": 72.0
+      },
+      "weighted avg": {
+        "precision": 0.9166666666666666,
+        "recall": 0.8888888888888888,
+        "f1-score": 0.8857142857142857,
+        "support": 72.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        24,
+        0,
+        0
+      ],
+      [
+        0,
+        24,
+        0
+      ],
+      [
+        0,
+        8,
+        16
+      ]
+    ],
+    "block_recall": 0.6666666666666666,
+    "block_missed": 8
+  },
+  "test": {
+    "count": 72,
+    "macro_f1": 0.7833333333333333,
+    "classification_report": {
+      "CONTINUE": {
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "f1-score": 0.8,
+        "support": 24.0
+      },
+      "ASK": {
+        "precision": 0.6,
+        "recall": 1.0,
+        "f1-score": 0.75,
+        "support": 24.0
+      },
+      "BLOCK": {
+        "precision": 1.0,
+        "recall": 0.6666666666666666,
+        "f1-score": 0.8,
+        "support": 24.0
+      },
+      "accuracy": 0.7777777777777778,
+      "macro avg": {
+        "precision": 0.8666666666666667,
+        "recall": 0.7777777777777777,
+        "f1-score": 0.7833333333333333,
+        "support": 72.0
+      },
+      "weighted avg": {
+        "precision": 0.8666666666666667,
+        "recall": 0.7777777777777778,
+        "f1-score": 0.7833333333333334,
+        "support": 72.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        16,
+        8,
+        0
+      ],
+      [
+        0,
+        24,
+        0
+      ],
+      [
+        0,
+        8,
+        16
+      ]
+    ],
+    "block_recall": 0.6666666666666666,
+    "block_missed": 8
+  }
+}
+saved C:\Users\mu\Desktop\code\model\harmony-risk-guard\models\baseline_e0.joblib and C:\Users\mu\Desktop\code\model\harmony-risk-guard\reports\baseline_e0.json
+RUN: training\train.py --device cpu --mode head --epochs 20 --early-stop-patience 5 --threads 8
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at hfl/minirbt-h256 and are newly initialized: ['bert.pooler.dense.bias', 'bert.pooler.dense.weight', 'classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+{"epoch": 1, "train_loss": 1.2401608559820387, "val_macro_f1": 0.16666666666666666, "epoch_seconds": 16.09}
+{"epoch": 2, "train_loss": 1.0919974048932393, "val_macro_f1": 0.3398168158896779, "epoch_seconds": 9.57}
+{"epoch": 3, "train_loss": 1.0495061377684276, "val_macro_f1": 0.39278752436647174, "epoch_seconds": 7.64}
+{"epoch": 4, "train_loss": 0.9475083947181702, "val_macro_f1": 0.16666666666666666, "epoch_seconds": 8.57}
+{"epoch": 5, "train_loss": 0.944613065984514, "val_macro_f1": 0.3657262277951933, "epoch_seconds": 7.33}
+{"epoch": 6, "train_loss": 0.8774546318584018, "val_macro_f1": 0.39775910364145656, "epoch_seconds": 8.63}
+{"epoch": 7, "train_loss": 0.7316209657324685, "val_macro_f1": 0.37855477855477854, "epoch_seconds": 7.74}
+{"epoch": 8, "train_loss": 0.5023732657233874, "val_macro_f1": 0.4541062801932367, "epoch_seconds": 2.76}
+{"epoch": 9, "train_loss": 0.7210087950030962, "val_macro_f1": 0.6994152046783627, "epoch_seconds": 2.5}
+{"epoch": 10, "train_loss": 0.5661807838413451, "val_macro_f1": 0.3209876543209877, "epoch_seconds": 2.95}
+{"epoch": 11, "train_loss": 0.5412291598816713, "val_macro_f1": 0.7020833333333334, "epoch_seconds": 2.71}
+{"epoch": 12, "train_loss": 0.4969234714905421, "val_macro_f1": 0.4128639721860061, "epoch_seconds": 2.47}
+{"epoch": 13, "train_loss": 0.5365922037098143, "val_macro_f1": 0.5174603174603174, "epoch_seconds": 3.15}
+{"epoch": 14, "train_loss": 0.40822386286324924, "val_macro_f1": 0.5975579975579975, "epoch_seconds": 5.93}
+{"epoch": 15, "train_loss": 0.3678800594061613, "val_macro_f1": 0.6924474306333209, "epoch_seconds": 7.21}
+{"epoch": 16, "train_loss": 0.48131562976373565, "val_macro_f1": 0.48418300653594776, "epoch_seconds": 7.6}
+early stop at epoch 16 (best 0.7021 @ 11)
+Saved best checkpoint: C:\Users\mu\Desktop\code\model\harmony-risk-guard\models\finetuned_head (best val macro-F1 0.7021 @ epoch 11)
+RUN: training\train.py --device cpu --mode last2 --epochs 20 --early-stop-patience 5 --threads 8
+'(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /hfl/minirbt-h256/resolve/main/tokenizer_config.json (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1081)')))"), '(Request ID: da78d0ad-a78e-4339-892d-8dabddfa3ccd)')' thrown while requesting HEAD https://huggingface.co/hfl/minirbt-h256/resolve/main/tokenizer_config.json
+Retrying in 1s [Retry 1/5].
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at hfl/minirbt-h256 and are newly initialized: ['bert.pooler.dense.bias', 'bert.pooler.dense.weight', 'classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+{"epoch": 1, "train_loss": 1.236023227373759, "val_macro_f1": 0.16666666666666666, "epoch_seconds": 10.26}
+{"epoch": 2, "train_loss": 1.0623431305090587, "val_macro_f1": 0.3213589529379003, "epoch_seconds": 9.45}
+{"epoch": 3, "train_loss": 0.9468216995398203, "val_macro_f1": 0.7242890442890443, "epoch_seconds": 13.14}
+{"epoch": 4, "train_loss": 0.4580309871170256, "val_macro_f1": 0.749454614727553, "epoch_seconds": 10.38}
+{"epoch": 5, "train_loss": 0.14121887429306904, "val_macro_f1": 0.7598116169544741, "epoch_seconds": 7.83}
+{"epoch": 6, "train_loss": 0.03238072554166946, "val_macro_f1": 0.75, "epoch_seconds": 8.38}
+{"epoch": 7, "train_loss": 0.11707742855651304, "val_macro_f1": 0.7279314888010541, "epoch_seconds": 9.22}
+{"epoch": 8, "train_loss": 0.05321217432113675, "val_macro_f1": 0.75, "epoch_seconds": 9.07}
+{"epoch": 9, "train_loss": 0.020516218808350258, "val_macro_f1": 0.7757575757575758, "epoch_seconds": 9.86}
+{"epoch": 10, "train_loss": 0.0070190943612639485, "val_macro_f1": 0.8548094373865699, "epoch_seconds": 8.96}
+{"epoch": 11, "train_loss": 0.0006860189751023427, "val_macro_f1": 0.75, "epoch_seconds": 9.78}
+{"epoch": 12, "train_loss": 0.004599706445232086, "val_macro_f1": 0.75, "epoch_seconds": 9.72}
+{"epoch": 13, "train_loss": 0.002145201983997443, "val_macro_f1": 0.759480755059237, "epoch_seconds": 12.68}
+{"epoch": 14, "train_loss": 0.0017588967481666866, "val_macro_f1": 0.8387540082455337, "epoch_seconds": 12.48}
+{"epoch": 15, "train_loss": 0.002667128830378513, "val_macro_f1": 0.8704453441295547, "epoch_seconds": 9.92}
+{"epoch": 16, "train_loss": 0.001544984758867132, "val_macro_f1": 0.7874762808349146, "epoch_seconds": 9.78}
+{"epoch": 17, "train_loss": 0.00044412319200798974, "val_macro_f1": 0.7874762808349146, "epoch_seconds": 9.05}
+{"epoch": 18, "train_loss": 0.0006215711736230231, "val_macro_f1": 0.7874762808349146, "epoch_seconds": 9.46}
+{"epoch": 19, "train_loss": 0.0011098101203970145, "val_macro_f1": 0.7874762808349146, "epoch_seconds": 8.55}
+{"epoch": 20, "train_loss": 0.0005359984994962966, "val_macro_f1": 0.75, "epoch_seconds": 10.33}
+early stop at epoch 20 (best 0.8704 @ 15)
+Saved best checkpoint: C:\Users\mu\Desktop\code\model\harmony-risk-guard\models\finetuned_last2 (best val macro-F1 0.8704 @ epoch 15)
+RUN: training\evaluate.py --model-dir models\finetuned_head --tag e1 --split test
+{
+  "model_dir": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\finetuned_head",
+  "split": "test",
+  "count": 72,
+  "macro_f1": 0.6892352382548461,
+  "block_recall": 0.75,
+  "block_missed": 6,
+  "confusion_matrix": [
+    [
+      15,
+      8,
+      1
+    ],
+    [
+      0,
+      16,
+      8
+    ],
+    [
+      0,
+      6,
+      18
+    ]
+  ],
+  "latency_ms": {
+    "mean": 26.4,
+    "p50": 25.98,
+    "p95": 38.18
+  },
+  "peak_rss_mb": 452.6
+}
+saved C:\Users\mu\Desktop\code\model\harmony-risk-guard\reports\evaluation_e1_test.json
+RUN: training\evaluate.py --model-dir models\finetuned_last2 --tag e2 --split test
+{
+  "model_dir": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\finetuned_last2",
+  "split": "test",
+  "count": 72,
+  "macro_f1": 0.7777777777777777,
+  "block_recall": 0.6666666666666666,
+  "block_missed": 8,
+  "confusion_matrix": [
+    [
+      24,
+      0,
+      0
+    ],
+    [
+      0,
+      16,
+      8
+    ],
+    [
+      0,
+      8,
+      16
+    ]
+  ],
+  "latency_ms": {
+    "mean": 39.67,
+    "p50": 32.8,
+    "p95": 88.54
+  },
+  "peak_rss_mb": 457.7
+}
+saved C:\Users\mu\Desktop\code\model\harmony-risk-guard\reports\evaluation_e2_test.json
+RUN: training\export_onnx.py --model-dir models\finetuned_last2 --seq-len 128
+C:\Users\mu\Desktop\code\model\harmony-risk-guard\training\export_onnx.py:50: DeprecationWarning: You are using the legacy TorchScript-based ONNX export. Starting in PyTorch 2.9, the new torch.export-based ONNX exporter has become the default. Learn more about the new export logic: https://docs.pytorch.org/docs/stable/onnx_export.html. For exporting control flow: https://pytorch.org/tutorials/beginner/onnx/export_control_flow_model_to_onnx_tutorial.html
+  torch.onnx.export(Wrapper(model), (sample['input_ids'], sample['attention_mask']),
+C:\Users\mu\Desktop\code\model\harmony-risk-guard\.venv\Lib\site-packages\transformers\modeling_attn_mask_utils.py:196: TracerWarning: torch.tensor results are registered as constants in the trace. You can safely ignore this warning if you use this function to create tensors out of constant variables that would be the same every time you call this function. In any other case, this might cause the trace to be incorrect.
+  inverted_mask = torch.tensor(1.0, dtype=dtype) - expanded_mask
+{
+  "onnx_path": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\risk_guard.onnx",
+  "onnx_bytes": 41470007,
+  "inputs": [
+    {
+      "name": "input_ids",
+      "shape": [
+        1,
+        128
+      ],
+      "type": "tensor(int64)"
+    },
+    {
+      "name": "attention_mask",
+      "shape": [
+        1,
+        128
+      ],
+      "type": "tensor(int64)"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "logits",
+      "shape": [
+        1,
+        3
+      ],
+      "type": "tensor(float)"
+    }
+  ],
+  "smoke_check": {
+    "samples": 3,
+    "label_agreement": 1.0,
+    "max_abs_logit_diff": 1.4781951904296875e-05
+  }
+}
+saved C:\Users\mu\Desktop\code\model\harmony-risk-guard\models\risk_guard.onnx
+RUN: training\validate_onnx.py --model-dir models\finetuned_last2 --samples 30
+{
+  "samples": 30,
+  "label_distribution": {
+    "CONTINUE": 10,
+    "ASK": 10,
+    "BLOCK": 10
+  },
+  "label_agreement": 1.0,
+  "max_abs_logit_diff": 1.811981201171875e-05,
+  "mean_abs_logit_diff": 5.32e-06
+}
+saved C:\Users\mu\Desktop\code\model\harmony-risk-guard\reports\onnx_parity.json and C:\Users\mu\Desktop\code\model\harmony-risk-guard\tests\golden_cases.jsonl
+ONNX PARITY OK
+RUN: training\predict.py --model-dir models\finetuned_last2 --instruction 永久删除用户重要资料 --tool file.delete --target user_document --scope recursive --authorization ambiguous --recoverable false --backup-available false --classification personal
+{
+  "decision": "BLOCK",
+  "scores": {
+    "CONTINUE": 0.00263,
+    "ASK": 0.36113,
+    "BLOCK": 0.63624
+  },
+  "backend": "torch:2.15.0+cpu",
+  "input": {
+    "instruction": "永久删除用户重要资料",
+    "tool": "file.delete",
+    "target": "user_document",
+    "scope": "recursive",
+    "affected_count": 1,
+    "authorization": "ambiguous",
+    "data_classification": "personal",
+    "recoverable": false,
+    "backup_available": false,
+    "destination_trust": "trusted"
+  },
+  "serialized": "用户指令：永久删除用户重要资料；工具：file.delete；目标：user_document；范围：recursive；数量：1；授权：ambiguous；数据分级：personal；可恢复：否；有备份：否；目的地信任：trusted",
+  "warning": "Experimental model on synthetic data; do not authorize destructive actions based on this prediction. Independent policy checks must run regardless and fail closed when uncertain."
+}
+Finished. Inspect models/ and reports/

@@ -45,7 +45,7 @@
     "onnxruntime": "1.32.0",
     "torch": "2.15.0+cpu",
     "python": "3.14.2",
-    "git_commit": null
+    "git_commit": "a41efd0"
   },
   "note": "int64 token-id inputs; MindSpore Lite compatibility is NOT established by this export."
 }

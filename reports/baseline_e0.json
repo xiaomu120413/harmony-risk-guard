@@ -122,12 +122,12 @@
     "block_missed": 8
   },
   "feature_count": 2558,
-  "elapsed_seconds": 0.17,
-  "peak_rss_mb": 425.4,
+  "elapsed_seconds": 0.22,
+  "peak_rss_mb": 425.0,
   "versions": {
     "sklearn": "1.9.1",
     "python": "3.14.2"
   },
-  "git_commit": null,
+  "git_commit": "a41efd0",
   "note": "TF-IDF sees the same serialized input as the neural models. Groups are held out across splits, so performance on val/test reflects generalization to unseen scenario groups, which is expectedly harder than keyword matching. Synthetic data only."
 }

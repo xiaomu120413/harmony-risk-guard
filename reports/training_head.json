@@ -23,7 +23,7 @@
     "python": "3.14.2",
     "cpu": "Intel64 Family 6 Model 151 Stepping 2, GenuineIntel",
     "threads": 8,
-    "git_commit": null
+    "git_commit": "a41efd0"
   },
   "train_rows": 144,
   "val_rows": 72,
@@ -32,97 +32,97 @@
       "epoch": 1,
       "train_loss": 1.2401608559820387,
       "val_macro_f1": 0.16666666666666666,
-      "epoch_seconds": 9.46
+      "epoch_seconds": 16.09
     },
     {
       "epoch": 2,
       "train_loss": 1.0919974048932393,
       "val_macro_f1": 0.3398168158896779,
-      "epoch_seconds": 14.43
+      "epoch_seconds": 9.57
     },
     {
       "epoch": 3,
       "train_loss": 1.0495061377684276,
       "val_macro_f1": 0.39278752436647174,
-      "epoch_seconds": 2.63
+      "epoch_seconds": 7.64
     },
     {
       "epoch": 4,
       "train_loss": 0.9475083947181702,
       "val_macro_f1": 0.16666666666666666,
-      "epoch_seconds": 3.11
+      "epoch_seconds": 8.57
     },
     {
       "epoch": 5,
       "train_loss": 0.944613065984514,
       "val_macro_f1": 0.3657262277951933,
-      "epoch_seconds": 2.52
+      "epoch_seconds": 7.33
     },
     {
       "epoch": 6,
       "train_loss": 0.8774546318584018,
       "val_macro_f1": 0.39775910364145656,
-      "epoch_seconds": 15.76
+      "epoch_seconds": 8.63
     },
     {
       "epoch": 7,
       "train_loss": 0.7316209657324685,
       "val_macro_f1": 0.37855477855477854,
-      "epoch_seconds": 12.09
+      "epoch_seconds": 7.74
     },
     {
       "epoch": 8,
       "train_loss": 0.5023732657233874,
       "val_macro_f1": 0.4541062801932367,
-      "epoch_seconds": 10.31
+      "epoch_seconds": 2.76
     },
     {
       "epoch": 9,
       "train_loss": 0.7210087950030962,
       "val_macro_f1": 0.6994152046783627,
-      "epoch_seconds": 7.56
+      "epoch_seconds": 2.5
     },
     {
       "epoch": 10,
       "train_loss": 0.5661807838413451,
       "val_macro_f1": 0.3209876543209877,
-      "epoch_seconds": 7.49
+      "epoch_seconds": 2.95
     },
     {
       "epoch": 11,
       "train_loss": 0.5412291598816713,
       "val_macro_f1": 0.7020833333333334,
-      "epoch_seconds": 8.74
+      "epoch_seconds": 2.71
     },
     {
       "epoch": 12,
       "train_loss": 0.4969234714905421,
       "val_macro_f1": 0.4128639721860061,
-      "epoch_seconds": 8.12
+      "epoch_seconds": 2.47
     },
     {
       "epoch": 13,
       "train_loss": 0.5365922037098143,
       "val_macro_f1": 0.5174603174603174,
-      "epoch_seconds": 8.79
+      "epoch_seconds": 3.15
     },
     {
       "epoch": 14,
       "train_loss": 0.40822386286324924,
       "val_macro_f1": 0.5975579975579975,
-      "epoch_seconds": 8.71
+      "epoch_seconds": 5.93
     },
     {
       "epoch": 15,
       "train_loss": 0.3678800594061613,
       "val_macro_f1": 0.6924474306333209,
-      "epoch_seconds": 8.9
+      "epoch_seconds": 7.21
     },
     {
       "epoch": 16,
       "train_loss": 0.48131562976373565,
       "val_macro_f1": 0.48418300653594776,
-      "epoch_seconds": 8.36
+      "epoch_seconds": 7.6
     }
   ],
   "best_val_macro_f1": 0.7020833333333334,
@@ -130,7 +130,7 @@
   "unfrozen_layer_params": 0,
   "trainable_parameters": 66563,
   "total_parameters": 10345987,
-  "elapsed_seconds": 137.42,
+  "elapsed_seconds": 103.3,
   "peak_rss_mb": 518.1,
   "out_dir": "C:\\Users\\mu\\Desktop\\code\\model\\harmony-risk-guard\\models\\finetuned_head"
 }

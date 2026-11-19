@@ -87,3 +87,9 @@ python training\predict.py --instruction "整理下载目录" --tool file.delete
 - ONNX int64 输入对 MindSpore Lite 的兼容性**未验证**；M2 需要独立转换与实机穿刺。
 - 模型输出只是风险建议：权限检查、不可恢复删除、凭据外发必须有独立策略引擎兜底，
   不确定时 fail closed。禁止将本模型作为高危操作的唯一闸门。
+
+## 相关调研
+
+- [docs/runbook.md](docs/runbook.md) — M1 全部实测记录、失败案例与复现命令
+- [docs/cann-local-lm-spike.md](docs/cann-local-lm-spike.md) — M3 备选路线（CANN 端侧 LLM 转换）穿刺：
+  WSL2 上 Qwen3.5-0.8B → epair 导出成功（2.0GB），KirinX90 omc 编译被算子覆盖硬阻（含证据）

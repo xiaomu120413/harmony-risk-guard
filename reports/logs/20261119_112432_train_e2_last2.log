@@ -1,0 +1,26 @@
+﻿'(MaxRetryError("HTTPSConnectionPool(host='huggingface.co', port=443): Max retries exceeded with url: /hfl/minirbt-h256/resolve/main/tokenizer_config.json (Caused by SSLError(SSLEOFError(8, '[SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1081)')))"), '(Request ID: da78d0ad-a78e-4339-892d-8dabddfa3ccd)')' thrown while requesting HEAD https://huggingface.co/hfl/minirbt-h256/resolve/main/tokenizer_config.json
+Retrying in 1s [Retry 1/5].
+Some weights of BertForSequenceClassification were not initialized from the model checkpoint at hfl/minirbt-h256 and are newly initialized: ['bert.pooler.dense.bias', 'bert.pooler.dense.weight', 'classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+{"epoch": 1, "train_loss": 1.236023227373759, "val_macro_f1": 0.16666666666666666, "epoch_seconds": 10.26}
+{"epoch": 2, "train_loss": 1.0623431305090587, "val_macro_f1": 0.3213589529379003, "epoch_seconds": 9.45}
+{"epoch": 3, "train_loss": 0.9468216995398203, "val_macro_f1": 0.7242890442890443, "epoch_seconds": 13.14}
+{"epoch": 4, "train_loss": 0.4580309871170256, "val_macro_f1": 0.749454614727553, "epoch_seconds": 10.38}
+{"epoch": 5, "train_loss": 0.14121887429306904, "val_macro_f1": 0.7598116169544741, "epoch_seconds": 7.83}
+{"epoch": 6, "train_loss": 0.03238072554166946, "val_macro_f1": 0.75, "epoch_seconds": 8.38}
+{"epoch": 7, "train_loss": 0.11707742855651304, "val_macro_f1": 0.7279314888010541, "epoch_seconds": 9.22}
+{"epoch": 8, "train_loss": 0.05321217432113675, "val_macro_f1": 0.75, "epoch_seconds": 9.07}
+{"epoch": 9, "train_loss": 0.020516218808350258, "val_macro_f1": 0.7757575757575758, "epoch_seconds": 9.86}
+{"epoch": 10, "train_loss": 0.0070190943612639485, "val_macro_f1": 0.8548094373865699, "epoch_seconds": 8.96}
+{"epoch": 11, "train_loss": 0.0006860189751023427, "val_macro_f1": 0.75, "epoch_seconds": 9.78}
+{"epoch": 12, "train_loss": 0.004599706445232086, "val_macro_f1": 0.75, "epoch_seconds": 9.72}
+{"epoch": 13, "train_loss": 0.002145201983997443, "val_macro_f1": 0.759480755059237, "epoch_seconds": 12.68}
+{"epoch": 14, "train_loss": 0.0017588967481666866, "val_macro_f1": 0.8387540082455337, "epoch_seconds": 12.48}
+{"epoch": 15, "train_loss": 0.002667128830378513, "val_macro_f1": 0.8704453441295547, "epoch_seconds": 9.92}
+{"epoch": 16, "train_loss": 0.001544984758867132, "val_macro_f1": 0.7874762808349146, "epoch_seconds": 9.78}
+{"epoch": 17, "train_loss": 0.00044412319200798974, "val_macro_f1": 0.7874762808349146, "epoch_seconds": 9.05}
+{"epoch": 18, "train_loss": 0.0006215711736230231, "val_macro_f1": 0.7874762808349146, "epoch_seconds": 9.46}
+{"epoch": 19, "train_loss": 0.0011098101203970145, "val_macro_f1": 0.7874762808349146, "epoch_seconds": 8.55}
+{"epoch": 20, "train_loss": 0.0005359984994962966, "val_macro_f1": 0.75, "epoch_seconds": 10.33}
+early stop at epoch 20 (best 0.8704 @ 15)
+Saved best checkpoint: C:\Users\mu\Desktop\code\model\harmony-risk-guard\models\finetuned_last2 (best val macro-F1 0.8704 @ epoch 15)

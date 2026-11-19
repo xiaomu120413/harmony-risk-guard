@@ -1,0 +1,125 @@
+cann-local-lm spike evidence Thu Nov 19 12:45:44 CST 2026
+==================================================
+
+[1] epair export artifacts (2.0GB, CONVERT EXIT=0)
+--------------------------------------------------
+    13316449  decode_ep_json_with_ascend_ir.json
+   508559360  host_weights_0.bin
+         218  host_weights_info.json
+        1685  model.json
+        4664  model_config.json
+        4096  prefill
+    13613585  prefill_ep_json_with_ascend_ir.json
+    12807982  tokenizer.json
+       16709  tokenizer_config.json
+      104900  weight_info.json
+  1571911376  weights_0.bin
+
+[2] model.json (runtime metadata)
+--------------------------------------------------
+{
+  "model_config": {
+    "hidden_size": 1024,
+    "max_io_tokens": 8192,
+    "model_type": "qwen3_5",
+    "num_hidden_layers": 24,
+    "prefill_len": [
+      64
+    ],
+    "decode_len": [
+      1
+    ],
+    "pad_token_id": 0,
+    "vocab_size": 248320,
+    "vocab_align_size": 248320,
+    "kv_cache_max_len": 2048,
+    "kv_cache_format": "nd",
+    "num_attention_kv_heads": 2,
+    "num_attention_head_dims": 256,
+    "batch_num": 1,
+    "kv_cache_type": "fp16",
+    "sliding_window": null,
+    "sliding_window_head_dim": 256,
+    "layer_types": [
+      "linear_attention",
+      "linear_attention",
+      "linear_attention",
+      "full_attention",
+      "linear_attention",
+      "linear_attention",
+      "linear_attention",
+      "full_attention",
+      "linear_attention",
+      "linear_attention",
+      "linear_attention",
+      "full_attention",
+      "linear_attention",
+      "linear_attention",
+      "linear_attention",
+      "full_attention",
+      "linear_attention",
+      "linear_attention",
+      "linear_attention",
+      "full_attention",
+      "linear_attention",
+      "linear_attention",
+      "linear_attention",
+      "full_attention"
+    ]
+  },
+  "embedding_config": {
+    "embedding_weights": "",
+    "embedding_quant_mode": "per_token",
+    "embedding_load_mode": "in_memory",
+    "embedding_type": "int8",
+    "embedding_scale_type": "fp32",
+    "token_identity_type": "int8",
+    "token_identity_scale_type": "fp32"
+  },
+  "tokenizer_config": {
+    "tokenizer_file": "",
+    "bos_token_id": 248044,
+    "eos_token_id": 248044,
+    "bos_token": "<bos>",
+    "eos_token": "<eos>",
+    "add_bos": true,
+    "special_tokens": {
+      "<turn|>": null
+    }
+  }
+}
+[3] omc compile for KirinX90: ops missing from kirinx90 ops-info
+--------------------------------------------------
+-- missing ops (deduped, suffix _N stripped) --
+ChunkGatedDeltaRule
+Conv2DV2
+L2Normalize
+SoftplusV2
+Swish
+
+-- example engine errors --
+[ERROR] GE(16990,cann_lm_compile):2026-11-19-12:41:43.577.154 [engine_place.cc:68]17662 SelectEngine: ErrorNo: 1343242282(assign engine failed)[Check][Param] Cannot find engine of op name Conv2DV2 type Conv2DV2
+[ERROR] GE(16990,cann_lm_compile):2026-11-19-12:41:43.577.161 [engine_place.cc:68]17667 SelectEngine: ErrorNo: 1343242282(assign engine failed)[Check][Param] Cannot find engine of op name Swish type Swish
+[ERROR] GE(16990,cann_lm_compile):2026-11-19-12:41:43.577.280 [engine_place.cc:68]17658 SelectEngine: ErrorNo: 1343242282(assign engine failed)[Check][Param] Cannot find engine of op name Swish_1 type Swish
+[ERROR] GE(16990,cann_lm_compile):2026-11-19-12:41:43.577.424 [engine_place.cc:68]17654 SelectEngine: ErrorNo: 1343242282(assign engine failed)[Check][Param] Cannot find engine of op name SoftplusV2 type SoftplusV2
+[ERROR] GE(16990,cann_lm_compile):2026-11-19-12:41:43.577.536 [engine_place.cc:68]17664 SelectEngine: ErrorNo: 1343242282(assign engine failed)[Check][Param] Cannot find engine of op name L2Normalize_1 type L2Normalize
+[ERROR] GE(16990,cann_lm_compile):2026-11-19-12:41:43.577.564 [engine_place.cc:68]17657 SelectEngine: ErrorNo: 1343242282(assign engine failed)[Check][Param] Cannot find engine of op name L2Normalize type L2Normalize
+
+-- kirinx90 ops-info op counts --
+  aic-kirinx90-ops-info-cv.json: 646 top-level keys
+  aic-kirinx90-ops-info-math.json: 1160 top-level keys
+  aic-kirinx90-ops-info-nn.json: 6608 top-level keys
+  aic-kirinx90-ops-info-transformer.json: 2535 top-level keys
+
+-- kernel counts --
+  ops_nn: 116 kernels
+  ops_math: 25 kernels
+  ops_transformer: 24 kernels
+  ops_cv: 11 kernels
+
+[4] environment versions
+--------------------------------------------------
+CANN: 
+converter: Name: cann-local-lm Version: 0.1.0 
+torch: 2.9.0+cpu | torchair TORCH_VERSION=20900
+model: Qwen/Qwen3.5-0.8B (Qwen3_5ForConditionalGeneration, 752,393,024 params)

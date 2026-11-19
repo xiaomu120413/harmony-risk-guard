@@ -1,0 +1,20 @@
+﻿Some weights of BertForSequenceClassification were not initialized from the model checkpoint at hfl/minirbt-h256 and are newly initialized: ['bert.pooler.dense.bias', 'bert.pooler.dense.weight', 'classifier.bias', 'classifier.weight']
+You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
+{"epoch": 1, "train_loss": 1.2401608559820387, "val_macro_f1": 0.16666666666666666, "epoch_seconds": 16.09}
+{"epoch": 2, "train_loss": 1.0919974048932393, "val_macro_f1": 0.3398168158896779, "epoch_seconds": 9.57}
+{"epoch": 3, "train_loss": 1.0495061377684276, "val_macro_f1": 0.39278752436647174, "epoch_seconds": 7.64}
+{"epoch": 4, "train_loss": 0.9475083947181702, "val_macro_f1": 0.16666666666666666, "epoch_seconds": 8.57}
+{"epoch": 5, "train_loss": 0.944613065984514, "val_macro_f1": 0.3657262277951933, "epoch_seconds": 7.33}
+{"epoch": 6, "train_loss": 0.8774546318584018, "val_macro_f1": 0.39775910364145656, "epoch_seconds": 8.63}
+{"epoch": 7, "train_loss": 0.7316209657324685, "val_macro_f1": 0.37855477855477854, "epoch_seconds": 7.74}
+{"epoch": 8, "train_loss": 0.5023732657233874, "val_macro_f1": 0.4541062801932367, "epoch_seconds": 2.76}
+{"epoch": 9, "train_loss": 0.7210087950030962, "val_macro_f1": 0.6994152046783627, "epoch_seconds": 2.5}
+{"epoch": 10, "train_loss": 0.5661807838413451, "val_macro_f1": 0.3209876543209877, "epoch_seconds": 2.95}
+{"epoch": 11, "train_loss": 0.5412291598816713, "val_macro_f1": 0.7020833333333334, "epoch_seconds": 2.71}
+{"epoch": 12, "train_loss": 0.4969234714905421, "val_macro_f1": 0.4128639721860061, "epoch_seconds": 2.47}
+{"epoch": 13, "train_loss": 0.5365922037098143, "val_macro_f1": 0.5174603174603174, "epoch_seconds": 3.15}
+{"epoch": 14, "train_loss": 0.40822386286324924, "val_macro_f1": 0.5975579975579975, "epoch_seconds": 5.93}
+{"epoch": 15, "train_loss": 0.3678800594061613, "val_macro_f1": 0.6924474306333209, "epoch_seconds": 7.21}
+{"epoch": 16, "train_loss": 0.48131562976373565, "val_macro_f1": 0.48418300653594776, "epoch_seconds": 7.6}
+early stop at epoch 16 (best 0.7021 @ 11)
+Saved best checkpoint: C:\Users\mu\Desktop\code\model\harmony-risk-guard\models\finetuned_head (best val macro-F1 0.7021 @ epoch 11)

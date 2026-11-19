@@ -101,7 +101,18 @@ Set-ExecutionPolicy -Scope Process Bypass
 
 ## 5. 下一步（M2-A 前置，未执行）
 
-1. 反事实数据工程（任务书第 5 节）：denied×file.delete 等授权翻转对，重训并复测 case3.3。
+1. 反事实数据工程（任务书第 5 节）：denied×file.delete 等授权翻转对，重训并复测 case3.4。
 2. M2-A 最小穿刺：简单 MLP ONNX → MindSpore Lite `.ms` → 鸿蒙 Native，
    需先确认鸿蒙 PC 型号 / HarmonyOS 版本 / DevEco SDK 版本（任务书第 20 节待确认项）。
 3. golden_cases.jsonl（30 条 token IDs + 双端 logits）作为三端 tokenizer/runtime parity 基准。
+
+## 6. 备选路线调研：cann-local-lm（M3 生成式模型方向）
+
+2026-11-19 在 WSL2 Ubuntu 24.04 上完成真实穿刺，详见
+[cann-local-lm-spike.md](cann-local-lm-spike.md) 与 [evidence](evidence/cann-local-lm_spike_evidence.txt)。
+
+- ✅ 环境打通：CANN 9.3.0 mobile-station + KirinX90 ops + P1 venv（torch 2.9.0+cpu）+ torch-delegate + torchair（ABI 20900）
+- ✅ **Qwen3.5-0.8B → epair 导出成功**（2.0GB：双图 JSON + 分离权重 + tokenizer + model.json），CPU-only 可跑，无需 NPU
+- ❌ **KirinX90 omc 编译被算子覆盖硬阻**：Conv2DV2 / SoftplusV2 / L2Normalize / ChunkGatedDeltaRule 不在该工具链的 kirinx90 ops-info 中（非配置问题）
+- 结论：M2 继续 ONNX→MindSpore Lite；M3 上 Kirin 需全量 ops 包或 aarch64 宿主按官方 workarounds 流程
+- 过程修复 6 个上游/环境问题（CRLF、wsl 转义层、hccl stubs、master/tag API 不一致、prefill_seq 签名、config 元数据缺失），详见报告
