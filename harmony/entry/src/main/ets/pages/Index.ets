@@ -14,6 +14,27 @@ const TAG: string = 'RiskGuardProbe';
 const MLP_GOLDEN: number[] = [0.161677, -0.013502, -0.003518];
 const MLP_SAMPLE: number[] = [0.1, 0.2, 0.3, 0.4];
 
+function softmax(v: number[]): number[] {
+  let m: number = -1e30;
+  for (let i = 0; i < v.length; i++) {
+    if (v[i] > m) {
+      m = v[i];
+    }
+  }
+  let sum: number = 0;
+  const e: number[] = [];
+  for (let i = 0; i < v.length; i++) {
+    const x: number = Math.exp(v[i] - m);
+    e.push(x);
+    sum += x;
+  }
+  const out: number[] = [];
+  for (let i = 0; i < e.length; i++) {
+    out.push(e[i] / sum);
+  }
+  return out;
+}
+
 @Entry
 @Component
 struct Index {
@@ -35,6 +56,22 @@ struct Index {
   @State private ndLogits: string = '-';
   @State private ndDiff: string = '-';
   @State private ndDetail: string = '';
+  // M2-E sandbox
+  @State private sbInstruction: string = '整理下载目录';
+  @State private sbTool: string = 'file.delete';
+  @State private sbTarget: string = 'user_document';
+  @State private sbAuth: string = 'ambiguous';
+  @State private sbRecoverable: boolean = false;
+  @State private sbTrust: string = 'trusted';
+  @State private sbScores: string = '-';
+  @State private sbDecision: string = '-';
+  @State private sbPolicy: string = '';
+  @State private sbRunning: boolean = false;
+  // M2-F benchmark
+  @State private benchStatus: string = 'idle';
+  @State private benchDetail: string = '-';
+  @State private benchRunning: boolean = false;
+  private tokenizer: BertTokenizer | null = null;
 
   aboutToAppear(): void {
     this.runAll();
@@ -155,6 +192,7 @@ struct Index {
     try {
       const vocabBytes: Uint8Array = await ctx.resourceManager.getRawFileContent('vocab.txt');
       const tok = BertTokenizer.load(vocabBytes);
+      this.tokenizer = tok;
       let matched: number = 0;
       let firstBad: string = '';
       for (let c = 0; c < TOKENIZER_CASES.length; c++) {
@@ -243,6 +281,117 @@ struct Index {
     }
   }
 
+  private renderSandbox(): string {
+    const b: string = this.sbRecoverable ? '是' : '否';
+    return '用户指令：' + this.sbInstruction +
+      '；工具：' + this.sbTool +
+      '；目标：' + this.sbTarget +
+      '；范围：single' +
+      '；数量：1' +
+      '；授权：' + this.sbAuth +
+      '；数据分级：internal' +
+      '；可恢复：' + b +
+      '；有备份：是' +
+      '；目的地信任：' + this.sbTrust;
+  }
+
+  private async runSandbox(): Promise<void> {
+    this.sbRunning = true;
+    this.sbPolicy = '';
+    try {
+      if (this.tokenizer === null) {
+        throw new Error('tokenizer not ready');
+      }
+      const text: string = this.renderSandbox();
+      const ids: number[] = this.tokenizer.encode(text);
+      const mask: number[] = [];
+      for (let i = 0; i < ids.length; i++) {
+        mask.push(ids[i] === 0 ? 0 : 1);
+      }
+      const logits: number[] = predict(ids, mask);
+      if (logits === null || logits === undefined) {
+        throw new Error('predict returned null (is the model loaded?)');
+      }
+      const probs: number[] = softmax(logits);
+      this.sbScores = RG_LABELS.map((label: string, i: number) =>
+        label + '=' + (probs[i] * 100).toFixed(2) + '%').join('  ');
+      let best: number = 0;
+      for (let i = 1; i < probs.length; i++) {
+        if (probs[i] > probs[best]) {
+          best = i;
+        }
+      }
+      const decision: string = RG_LABELS[best];
+      this.sbDecision = decision + ' (' + (probs[best] * 100).toFixed(2) + '%)';
+      this.sbPolicy = decision === 'BLOCK'
+        ? '策略提示：拒绝当前调用并保留审计；不可恢复操作需独立策略引擎二次确认。'
+        : (decision === 'ASK'
+          ? '策略提示：不自动执行，先向用户补充授权/目的地/恢复条件。'
+          : '策略提示：可建议继续，但仍受确定性权限策略约束。');
+      hilog.info(0x0000, TAG, 'SB_OK decision=%{public}s scores=%{public}s text=%{public}s',
+        decision, this.sbScores, text);
+    } catch (err) {
+      this.sbDecision = 'FAILED: ' + (err as Error).message;
+      hilog.error(0x0000, TAG, 'SB_FAIL %{public}s', (err as Error).message);
+    }
+    this.sbRunning = false;
+  }
+
+  private finishBenchmark(times: number[]): void {
+    times.sort((a: number, b: number) => a - b);
+    let sum: number = 0;
+    for (let i = 0; i < times.length; i++) {
+      sum += times[i];
+    }
+    const mean: number = sum / times.length;
+    const p50: number = times[Math.floor(times.length * 0.5)];
+    const p95: number = times[Math.floor(times.length * 0.95)];
+    this.benchStatus = 'M2-F DONE';
+    this.benchDetail = 'n=' + times.length + ' mean=' + mean.toFixed(1) + 'ms p50=' + p50 +
+      'ms p95=' + p95 + 'ms min=' + times[0] + 'ms max=' + times[times.length - 1] + 'ms';
+    hilog.info(0x0000, TAG, 'BENCH_OK %{public}s', this.benchDetail);
+    this.benchRunning = false;
+  }
+
+  private benchChunk(ids: number[], mask: number[], times: number[], total: number): void {
+    const end: number = Math.min(times.length + 25, total);
+    for (let i = times.length; i < end; i++) {
+      const t0: number = Date.now();
+      predict(ids, mask);
+      times.push(Date.now() - t0);
+    }
+    if (times.length < total) {
+      setTimeout(() => {
+        this.benchChunk(ids, mask, times, total);
+      }, 0);
+    } else {
+      this.finishBenchmark(times);
+    }
+  }
+
+  private runBenchmark(): void {
+    this.benchRunning = true;
+    this.benchStatus = 'running...';
+    this.benchDetail = '-';
+    try {
+      if (this.tokenizer === null) {
+        throw new Error('tokenizer not ready');
+      }
+      const ids: number[] = this.tokenizer.encode(this.renderSandbox());
+      const mask: number[] = [];
+      for (let i = 0; i < ids.length; i++) {
+        mask.push(ids[i] === 0 ? 0 : 1);
+      }
+      predict(ids, mask); // warmup
+      this.benchChunk(ids, mask, [], 1000);
+    } catch (err) {
+      this.benchStatus = 'M2-F FAILED';
+      this.benchDetail = (err as Error).message;
+      this.benchRunning = false;
+      hilog.error(0x0000, TAG, 'BENCH_FAIL %{public}s', (err as Error).message);
+    }
+  }
+
   private async runAll(): Promise<void> {
     const ctx = getContext(this) as common.UIAbilityContext;
     await this.runMlp(ctx);
@@ -293,6 +442,54 @@ struct Index {
         Text('logits: ' + this.ndLogits).fontSize(13)
         Text('max |Δ| vs PyTorch: ' + this.ndDiff).fontSize(13)
         Text(this.ndDetail).fontSize(12).fontColor('#666666')
+
+        Divider().margin({ top: 18, bottom: 6 })
+        Text('— M2-E: 交互式风险判定 —').fontSize(16)
+          .fontWeight(FontWeight.Medium)
+        TextInput({ text: this.sbInstruction, placeholder: '用户指令' })
+          .fontSize(13).margin({ top: 6 })
+          .onChange((v: string) => { this.sbInstruction = v; })
+        TextInput({ text: this.sbTool, placeholder: '工具 (如 file.delete)' })
+          .fontSize(13).margin({ top: 4 })
+          .onChange((v: string) => { this.sbTool = v; })
+        TextInput({ text: this.sbTarget, placeholder: '目标类型 (如 user_document)' })
+          .fontSize(13).margin({ top: 4 })
+          .onChange((v: string) => { this.sbTarget = v; })
+        Row({ space: 8 }) {
+          Text('授权:').fontSize(13)
+          Select([{ value: 'approved' }, { value: 'ambiguous' }, { value: 'denied' }])
+            .selected(this.sbAuth === 'approved' ? 0 : (this.sbAuth === 'ambiguous' ? 1 : 2))
+            .value(this.sbAuth)
+            .onSelect((index: number) => {
+              this.sbAuth = index === 0 ? 'approved' : (index === 1 ? 'ambiguous' : 'denied');
+            })
+          Checkbox().select(this.sbRecoverable)
+            .onChange((v: boolean) => { this.sbRecoverable = v; })
+          Text('可恢复').fontSize(13)
+          Text('目的地:').fontSize(13)
+          Select([{ value: 'trusted' }, { value: 'untrusted' }])
+            .selected(this.sbTrust === 'trusted' ? 0 : 1)
+            .value(this.sbTrust)
+            .onSelect((index: number) => {
+              this.sbTrust = index === 0 ? 'trusted' : 'untrusted';
+            })
+        }.margin({ top: 8 }).width('100%')
+        Button(this.sbRunning ? '运行中...' : '运行判定')
+          .enabled(!this.sbRunning)
+          .onClick(() => { this.runSandbox(); })
+          .margin({ top: 8 })
+        Text('分数: ' + this.sbScores).fontSize(13)
+        Text('决策: ' + this.sbDecision).fontSize(15).fontWeight(FontWeight.Medium)
+        Text(this.sbPolicy).fontSize(12).fontColor('#666666')
+
+        Text('— M2-F: 基准 1000 次 —').fontSize(16)
+          .fontWeight(FontWeight.Medium).margin({ top: 14 })
+        Button(this.benchRunning ? '基准运行中...' : '运行 1000 次基准')
+          .enabled(!this.benchRunning)
+          .onClick(() => { this.runBenchmark(); })
+          .margin({ top: 6 })
+        Text(this.benchStatus).fontSize(14)
+        Text(this.benchDetail).fontSize(12).fontColor('#666666')
       }
       .padding(24)
       .width('100%')

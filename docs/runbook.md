@@ -116,7 +116,10 @@ Set-ExecutionPolicy -Scope Process Bypass
    （17ms/次，logits max|Δ|=7.387e-6）。关键根因：C API 的 Context 必须显式添加
    CPU DeviceInfo，且重建模型时 context 必须成对重建。详见 [m2d-native.md](m2d-native.md)，
    截图 [evidence](evidence/m2d_native_pass.jpeg)。
-5. M2-E UI：输入指令/上下文 → 三类分数 + 决策 + 策略提示；M2-F 基准（1000 次/冷启动）。
+5. ~~M2-E UI / M2-F 基准~~ ✅ **已完成（2026-11-19）**：交互式判定 UI（输入 → 三类分数
+   + 决策 + 策略提示），实测 ASK 99.92%；1000 次连续推理 P50 15ms / P95 16ms，
+   Pss ≈99.5MB，无 ANR（分批让出 UI 线程）。详见 [m2ef-ui-bench.md](m2ef-ui-bench.md)，
+   截图 [evidence](evidence/m2ef_sandbox_bench.jpeg)。
 6. 反事实数据工程（任务书第 5 节）：denied×file.delete 等授权翻转对，重训并复测 case3.4。
 
 ## 6. 备选路线调研：cann-local-lm（M3 生成式模型方向）
