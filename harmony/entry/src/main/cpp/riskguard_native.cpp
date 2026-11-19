@@ -17,6 +17,7 @@
 
 static OH_AI_ModelHandle g_model = nullptr;
 static OH_AI_ContextHandle g_ctx = nullptr;
+static std::string g_backendDesc = "";  // e.g. "CPU (threads=2)"
 
 // Standard MindSpore Lite C API setup: the context must carry a CPU device info,
 // otherwise ModelBuild returns LITE_NULLPTR on OHOS.
@@ -36,7 +37,10 @@ static bool EnsureContext(int threadNum)
         return false;
     }
     OH_AI_ContextAddDeviceInfo(g_ctx, cpu);
-    LOGI("CPU device info added");
+    g_backendDesc = threadNum > 0
+        ? "CPU (threads=" + std::to_string(threadNum) + ")"
+        : "CPU (default threads)";
+    LOGI("CPU device info added: %{public}s", g_backendDesc.c_str());
     if (threadNum > 0) {
         OH_AI_ContextSetThreadNum(g_ctx, threadNum);
     }
@@ -243,6 +247,60 @@ static napi_value Diagnose(napi_env env, napi_callback_info info)
     return arr;
 }
 
+// Report which compute backend the model was built for (we only ever add a CPU
+// device info), plus which NNRT accelerators the system exposes (for reference).
+static const char *NnrtTypeName(OH_AI_NNRTDeviceType t)
+{
+    switch (t) {
+        case OH_AI_NNRTDEVICE_CPU: return "CPU";
+        case OH_AI_NNRTDEVICE_GPU: return "GPU";
+        case OH_AI_NNRTDEVICE_ACCELERATOR: return "ACCELERATOR";
+        default: return "OTHERS";
+    }
+}
+
+static napi_value InferenceBackend(napi_env env, napi_callback_info info)
+{
+    std::string out = g_backendDesc;
+    if (out.empty()) {
+        out = "CPU (context not created yet)";
+    }
+    napi_value res = nullptr;
+    napi_create_string_utf8(env, out.c_str(), out.size(), &res);
+    return res;
+}
+
+static napi_value AvailableAccelerators(napi_env env, napi_callback_info info)
+{
+    size_t num = 0;
+    NNRTDeviceDesc *descs = OH_AI_GetAllNNRTDeviceDescs(&num);
+    std::string out;
+    if (descs != nullptr) {
+        for (size_t i = 0; i < num; i++) {
+            NNRTDeviceDesc *d = OH_AI_GetElementOfNNRTDeviceDescs(descs, i);
+            if (d == nullptr) {
+                continue;
+            }
+            const char *name = OH_AI_GetNameFromNNRTDeviceDesc(d);
+            OH_AI_NNRTDeviceType t = OH_AI_GetTypeFromNNRTDeviceDesc(d);
+            if (!out.empty()) {
+                out += " | ";
+            }
+            out += (name != nullptr ? name : "unknown");
+            out += ":";
+            out += NnrtTypeName(t);
+        }
+        OH_AI_DestroyAllNNRTDeviceDescs(&descs);
+    }
+    if (out.empty()) {
+        out = "none";
+    }
+    LOGI("available NNRT devices: %{public}s", out.c_str());
+    napi_value res = nullptr;
+    napi_create_string_utf8(env, out.c_str(), out.size(), &res);
+    return res;
+}
+
 static napi_value Predict(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
@@ -319,6 +377,8 @@ static napi_value Init(napi_env env, napi_value exports)
         {"loadModel", nullptr, LoadModel, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"loadModelFromBuffer", nullptr, LoadModelFromBuffer, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"diagnose", nullptr, Diagnose, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"inferenceBackend", nullptr, InferenceBackend, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"availableAccelerators", nullptr, AvailableAccelerators, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"predict", nullptr, Predict, nullptr, nullptr, nullptr, napi_default, nullptr},
     };
     napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);

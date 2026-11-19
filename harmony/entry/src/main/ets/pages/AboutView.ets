@@ -47,7 +47,7 @@ export struct AboutView {
           this.infoRow('大小', '41.2 MB（MindSpore Lite .ms）')
           this.infoRow('输入', '指令 / 工具 / 目标 / 上下文（token ids [1,128]）')
           this.infoRow('输出', '可继续 CONTINUE · 需确认 ASK · 应阻止 BLOCK')
-          this.infoRow('推理', '全本地 CPU，单次约 15–20 ms')
+          this.infoRow('推理', 'CPU（MindSpore Lite，未启用 NPU/GPU），单次约 15–20 ms')
         }
         .alignItems(HorizontalAlign.Start)
         .padding(20).backgroundColor('#FFFFFF').borderRadius(16).width('100%')

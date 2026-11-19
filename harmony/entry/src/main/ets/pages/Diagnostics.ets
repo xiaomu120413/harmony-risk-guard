@@ -3,7 +3,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { fileIo } from '@kit.CoreFileKit';
 import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
-import { loadModelFromBuffer, predict } from 'libriskguard_native.so';
+import { loadModelFromBuffer, predict, inferenceBackend, availableAccelerators } from 'libriskguard_native.so';
 import {
   RG_SAMPLE_ID, RG_INPUT_IDS, RG_ATTENTION_MASK, RG_PT_LOGITS, RG_PT_LABEL, RG_LABELS
 } from '../model/GoldenData';
@@ -29,6 +29,8 @@ struct Diagnostics {
   @State private benchStatus: string = '未运行';
   @State private benchDetail: string = '';
   @State private benchRunning: boolean = false;
+  @State private backendStatus: string = 'CPU';
+  @State private backendDetail: string = '显式配置 CPU，未启用 NPU/GPU';
 
   private async copyRaw(ctx: common.UIAbilityContext, name: string): Promise<string> {
     const raw: Uint8Array = await ctx.resourceManager.getRawFileContent(name);
@@ -150,6 +152,16 @@ struct Diagnostics {
     await this.runMlpChecks(ctx);
     await this.runGoldenAndTokenizer(ctx);
     await this.runNativeChecks(ctx);
+    try {
+      const backend: string = inferenceBackend();
+      const accel: string = availableAccelerators();
+      this.backendStatus = backend;
+      this.backendDetail = '显式配置 CPU，未启用 NPU/GPU · 系统可用加速器: ' + accel;
+      hilog.info(0x0000, TAG, 'BACKEND %{public}s | %{public}s', backend, accel);
+    } catch (err) {
+      this.backendStatus = '查询失败';
+      this.backendDetail = (err as Error).message;
+    }
     this.running = false;
   }
 
@@ -232,6 +244,7 @@ struct Diagnostics {
         this.checkRow('M2-B 真实模型（MiniRBT）', this.rgStatus, this.rgDetail)
         this.checkRow('M2-C 分词一致性（31 例）', this.tokStatus, this.tokDetail)
         this.checkRow('M2-D 原生 NAPI（C API）', this.ndStatus, this.ndDetail)
+        this.checkRow('推理后端（CPU / NPU / GPU）', this.backendStatus, this.backendDetail)
 
         Column({ space: 8 }) {
           Row({ space: 12 }) {
