@@ -5,12 +5,13 @@
 
 ## 1. 结论
 
-**30/30 条 golden cases 的 token IDs 与 Windows 侧 HuggingFace BertTokenizer 完全一致。**
+**31/31 条 golden cases 的 token IDs 与 Windows 侧 HuggingFace BertTokenizer 完全一致**
+（30 条真实样本 + 1 条超长文本截断用例 `LONG-TRUNC-001`，覆盖 truncation 路径）。
 
 设备日志：
 
 ```
-TOK_DONE 30/30 cases match
+TOK_DONE 31/31 cases match
 ```
 
 UI（[截图](evidence/m2c_all_probes_pass.jpeg)）：M2-A / M2-B / M2-C 三项同屏 PASS。
@@ -28,8 +29,10 @@ UI（[截图](evidence/m2c_all_probes_pass.jpeg)）：M2-A / M2-B / M2-C 三项�
 5. `[CLS] + tokens + [SEP]`，截断到 128，`[PAD]` 补齐
 
 验证方式：
-- 先在 Windows 侧用 Python 复刻同一算法自检 → 30/30 匹配（排除逻辑错误）
-- 再在设备上跑 ArkTS 实现 → 30/30 匹配
+- 先在 Windows 侧用 Python 复刻同一算法自检 → 31/31 匹配（排除逻辑错误）
+- 再在设备上跑 ArkTS 实现 → 31/31 匹配
+- 截断用例：822 字符长文本，HF `truncation=True, max_length=128` 与端侧结果逐位一致
+  （含末位 `[SEP]` 替换与 `[PAD]` 补齐）
 
 ## 3. 踩坑（已修复）
 
@@ -42,7 +45,7 @@ UI（[截图](evidence/m2c_all_probes_pass.jpeg)）：M2-A / M2-B / M2-C 三项�
 | 路径 | 内容 |
 |---|---|
 | `harmony/entry/src/main/ets/model/BertTokenizer.ets` | ArkTS WordPiece 实现 |
-| `harmony/entry/src/main/ets/model/TokenizerGolden.ets` | 30 条 golden cases（text + ids[128] + mask[128]） |
+| `harmony/entry/src/main/ets/model/TokenizerGolden.ets` | 31 条 golden cases（含截断用例，text + ids[128] + mask[128]） |
 | `harmony/entry/src/main/resources/rawfile/vocab.txt` | MiniRBT 词表（21,128 条） |
 | `scripts/gen_tokenizer_golden.py` | golden 数据生成器 |
 | `docs/evidence/m2c_all_probes_pass.jpeg` | 三项 PASS 同屏截图 |

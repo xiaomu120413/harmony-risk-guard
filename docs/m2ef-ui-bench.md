@@ -49,7 +49,7 @@ render() 结构化序列化 → ArkTS BertTokenizer.encode → 原生 predict（
 |---|---|---|
 | M2-A 最小穿刺 | ✅ | converter 2.11.0 + MindSporeLiteKit 可用；MLP max|Δ|=4.3e-7 |
 | M2-B 真实模型 | ✅ | MiniRBT 41.5MB；load 25ms / infer 17ms；logits max|Δ|=7.4e-6 |
-| M2-C Tokenizer | ✅ | ArkTS WordPiece；30/30 golden cases 一致 |
+| M2-C Tokenizer | ✅ | ArkTS WordPiece；31/31 golden cases 一致（含截断） |
 | M2-D Native | ✅ | NAPI + C API（需 CPU DeviceInfo）；infer 17ms |
 | M2-E UI | ✅ | 交互输入 → 三类分数 + 决策 + 策略提示 |
 | M2-F 基准 | ✅ | 1000 次连续，P50 15ms / P95 16ms，Pss 99.5MB |

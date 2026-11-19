@@ -110,8 +110,9 @@ Set-ExecutionPolicy -Scope Process Bypass
    converter 自动把 int64 输入降为 int32（端侧自适应填充）。详见
    [m2b-real-model.md](m2b-real-model.md)，截图 [evidence](evidence/m2b_real_model_pass.jpeg)。
 3. ~~M2-C Tokenizer~~ ✅ **已完成（2026-11-19）**：纯 ArkTS WordPiece 端侧实现，
-   30/30 golden cases token IDs 与 HuggingFace 完全一致（修复 UTF-8 词表解码 bug）。
-   详见 [m2c-tokenizer.md](m2c-tokenizer.md)，截图 [evidence](evidence/m2c_all_probes_pass.jpeg)。
+   31/31 golden cases token IDs 与 HuggingFace 完全一致（含超长文本截断用例；
+   修复 UTF-8 词表解码 bug）。详见 [m2c-tokenizer.md](m2c-tokenizer.md)，
+   截图 [evidence](evidence/m2c_all_probes_pass.jpeg)。
 4. ~~M2-D Native~~ ✅ **已完成（2026-11-19）**：NAPI + MindSpore Lite C API 实机推理成功
    （17ms/次，logits max|Δ|=7.387e-6）。关键根因：C API 的 Context 必须显式添加
    CPU DeviceInfo，且重建模型时 context 必须成对重建。详见 [m2d-native.md](m2d-native.md)，
