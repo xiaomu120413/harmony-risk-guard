@@ -142,8 +142,10 @@ export struct AssessView {
         scores: '继续 ' + (result.continueScore * 100).toFixed(1) + '% / 确认 ' +
           (result.askScore * 100).toFixed(1) + '% / 阻止 ' + (result.blockScore * 100).toFixed(1) + '%'
       });
-      hilog.info(0x0000, TAG, 'ASSESS ok decision=%{public}s latency=%{public}dms',
-        result.decision, result.latencyMs);
+      const scoreText: string = (result.continueScore * 100).toFixed(1) + '/' +
+        (result.askScore * 100).toFixed(1) + '/' + (result.blockScore * 100).toFixed(1);
+      hilog.info(0x0000, TAG, 'ASSESS ok decision=%{public}s scores=%{public}s latency=%{public}dms',
+        result.decision, scoreText, result.latencyMs);
     } catch (err) {
       this.errorText = (err as Error).message;
       hilog.error(0x0000, TAG, 'ASSESS failed: %{public}s', this.errorText);
@@ -354,6 +356,10 @@ export struct AssessView {
             Text(adviceText(this.decision))
               .fontSize(13)
               .fontColor('#182431')
+              .width('100%')
+            Text('置信度为模型原始输出；模型在合成数据上高度拟合，数值偏饱和（常见 99%+），请结合策略判断。')
+              .fontSize(11)
+              .fontColor('#8A94A6')
               .width('100%')
             Text('本结果只是风险建议，不构成授权；高危操作必须由确定性策略引擎兜底。')
               .fontSize(11)

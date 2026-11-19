@@ -3,7 +3,7 @@ import { hilog } from '@kit.PerformanceAnalysisKit';
 import { fileIo } from '@kit.CoreFileKit';
 import { common } from '@kit.AbilityKit';
 import { router } from '@kit.ArkUI';
-import { loadModelFromBuffer, predict, inferenceBackend, availableAccelerators } from 'libriskguard_native.so';
+import { loadModelFromBuffer, loadModelWithBackend, predict, inferenceBackend, availableAccelerators } from 'libriskguard_native.so';
 import {
   RG_SAMPLE_ID, RG_INPUT_IDS, RG_ATTENTION_MASK, RG_PT_LOGITS, RG_PT_LABEL, RG_LABELS
 } from '../model/GoldenData';
@@ -31,6 +31,9 @@ struct Diagnostics {
   @State private benchRunning: boolean = false;
   @State private backendStatus: string = 'CPU';
   @State private backendDetail: string = '显式配置 CPU，未启用 NPU/GPU';
+  @State private npuStatus: string = '未尝试';
+  @State private npuDetail: string = '点击下方按钮尝试 NPU（NNRT）推理';
+  @State private npuRunning: boolean = false;
 
   private async copyRaw(ctx: common.UIAbilityContext, name: string): Promise<string> {
     const raw: Uint8Array = await ctx.resourceManager.getRawFileContent(name);
@@ -205,6 +208,47 @@ struct Diagnostics {
     this.benchChunk([], 1000);
   }
 
+  private async runNpuAttempt(): Promise<void> {
+    this.npuRunning = true;
+    this.npuStatus = 'NPU 尝试中…';
+    this.npuDetail = '';
+    try {
+      const ctx = getContext(this) as common.UIAbilityContext;
+      const modelBytes: Uint8Array = await ctx.resourceManager.getRawFileContent('risk_guard.ms');
+      const status: number = loadModelWithBackend(modelBytes, 'npu');
+      const backend: string = inferenceBackend();
+      if (status !== 0) {
+        this.npuStatus = 'NPU 不可用（平台限制）';
+        this.npuDetail = 'NPU build status=' + status + '，当前后端: ' + backend +
+          '。原因：HiAI 离线路径仅接受预编译第三方模型（Custom+OM 缓冲），标准 .ms 被拒；在线 NPU 路径不识别系统设备名。';
+        hilog.warn(0x0000, TAG, 'NPU fallback: status=%{public}d backend=%{public}s',
+          status, backend);
+        this.npuRunning = false;
+        return;
+      }
+      const t0: number = Date.now();
+      const logits: number[] = predict(RG_INPUT_IDS, RG_ATTENTION_MASK);
+      const inferMs: number = Date.now() - t0;
+      let worst: number = 0;
+      for (let i = 0; i < logits.length; i++) {
+        const d = Math.abs(logits[i] - RG_PT_LOGITS[i]);
+        if (d > worst) {
+          worst = d;
+        }
+      }
+      const ok: boolean = worst < 1e-2;
+      this.npuStatus = ok ? 'NPU PASS' : 'NPU MISMATCH';
+      this.npuDetail = '后端: ' + backend + ' · infer=' + inferMs + 'ms · max|Δ|=' +
+        worst.toExponential(3);
+      hilog.info(0x0000, TAG, 'NPU_RESULT %{public}s | %{public}s', this.npuStatus, this.npuDetail);
+    } catch (err) {
+      this.npuStatus = 'NPU 尝试失败';
+      this.npuDetail = (err as Error).message;
+      hilog.error(0x0000, TAG, 'NPU_FAIL %{public}s', this.npuDetail);
+    }
+    this.npuRunning = false;
+  }
+
   @Builder
   checkRow(title: string, status: string, detail: string) {
     Column({ space: 4 }) {
@@ -245,6 +289,23 @@ struct Diagnostics {
         this.checkRow('M2-C 分词一致性（31 例）', this.tokStatus, this.tokDetail)
         this.checkRow('M2-D 原生 NAPI（C API）', this.ndStatus, this.ndDetail)
         this.checkRow('推理后端（CPU / NPU / GPU）', this.backendStatus, this.backendDetail)
+        Column({ space: 6 }) {
+          Row({ space: 12 }) {
+            Button(this.npuRunning ? 'NPU 尝试中…' : '尝试 NPU 推理')
+              .enabled(!this.npuRunning)
+              .height(34).fontSize(13)
+              .backgroundColor('#FFFFFF').fontColor('#0A59F7')
+              .border({ width: 1, color: '#BFD3F2' })
+              .onClick(() => { this.runNpuAttempt(); })
+            Text(this.npuStatus).fontSize(13)
+              .fontColor(this.npuStatus.indexOf('PASS') >= 0 ? '#1B7F3A'
+                : (this.npuStatus.indexOf('不可用') >= 0 || this.npuStatus.indexOf('失败') >= 0
+                  ? '#B26A00' : '#4A5568'))
+          }.width('100%')
+          Text(this.npuDetail).fontSize(11).fontColor('#8A94A6').width('100%')
+        }
+        .alignItems(HorizontalAlign.Start)
+        .padding(14).backgroundColor('#FFFFFF').borderRadius(12).width('100%')
 
         Column({ space: 8 }) {
           Row({ space: 12 }) {

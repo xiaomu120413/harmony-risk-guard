@@ -19,9 +19,59 @@ static OH_AI_ModelHandle g_model = nullptr;
 static OH_AI_ContextHandle g_ctx = nullptr;
 static std::string g_backendDesc = "";  // e.g. "CPU (threads=2)"
 
-// Standard MindSpore Lite C API setup: the context must carry a CPU device info,
-// otherwise ModelBuild returns LITE_NULLPTR on OHOS.
-static bool EnsureContext(int threadNum)
+// Collect NNRT accelerators, preferring the HiAI Foundation device ("HIAI_F"),
+// which is the path MindSpore Lite 2.7 uses for offline Kirin NPU inference.
+struct AccelInfo {
+    std::string name;
+    size_t deviceId;
+};
+
+static std::vector<AccelInfo> FindAccelerators()
+{
+    std::vector<AccelInfo> out;
+    size_t num = 0;
+    NNRTDeviceDesc *descs = OH_AI_GetAllNNRTDeviceDescs(&num);
+    if (descs != nullptr) {
+        for (size_t i = 0; i < num; i++) {
+            NNRTDeviceDesc *d = OH_AI_GetElementOfNNRTDeviceDescs(descs, i);
+            if (d == nullptr) {
+                continue;
+            }
+            if (OH_AI_GetTypeFromNNRTDeviceDesc(d) != OH_AI_NNRTDEVICE_ACCELERATOR) {
+                continue;
+            }
+            const char *n = OH_AI_GetNameFromNNRTDeviceDesc(d);
+            if (n != nullptr) {
+                AccelInfo info;
+                info.name = n;
+                info.deviceId = OH_AI_GetDeviceIdFromNNRTDeviceDesc(d);
+                out.push_back(info);
+            }
+        }
+        OH_AI_DestroyAllNNRTDeviceDescs(&descs);
+    }
+    // Preference: HIAI_F first, then NPU_* (online Kirin path), then others.
+    std::vector<AccelInfo> ordered;
+    for (size_t i = 0; i < out.size(); i++) {
+        if (out[i].name.rfind("HIAI_F", 0) == 0) {
+            ordered.push_back(out[i]);
+        }
+    }
+    for (size_t i = 0; i < out.size(); i++) {
+        if (out[i].name.rfind("NPU_", 0) == 0) {
+            ordered.push_back(out[i]);
+        }
+    }
+    if (ordered.empty()) {
+        ordered = out;
+    }
+    return ordered;
+}
+
+// Standard MindSpore Lite C API setup: a context must carry a device info.
+// useNpu=true selects an NNRT accelerator (Kirin NPU); falls back to CPU
+// automatically when no accelerator is usable.
+static bool EnsureContext(int threadNum, bool useNpu)
 {
     if (g_ctx != nullptr) {
         return true;
@@ -30,6 +80,28 @@ static bool EnsureContext(int threadNum)
     if (g_ctx == nullptr) {
         LOGE("ContextCreate failed");
         return false;
+    }
+    if (useNpu) {
+        std::vector<AccelInfo> accels = FindAccelerators();
+        if (!accels.empty()) {
+            const AccelInfo &pick = accels[0];
+            OH_AI_DeviceInfoHandle npu = OH_AI_CreateNNRTDeviceInfoByName(pick.name.c_str());
+            if (npu == nullptr) {
+                npu = OH_AI_CreateNNRTDeviceInfoByType(OH_AI_NNRTDEVICE_ACCELERATOR);
+            }
+            if (npu != nullptr) {
+                OH_AI_DeviceInfoSetDeviceId(npu, pick.deviceId);
+                OH_AI_DeviceInfoSetPerformanceMode(npu, OH_AI_PERFORMANCE_HIGH);
+                OH_AI_ContextAddDeviceInfo(g_ctx, npu);
+                g_backendDesc = "NPU (" + pick.name + ", id=" + std::to_string(pick.deviceId) + ")";
+                LOGI("NPU device info added: %{public}s", g_backendDesc.c_str());
+                if (threadNum > 0) {
+                    OH_AI_ContextSetThreadNum(g_ctx, threadNum);
+                }
+                return true;
+            }
+        }
+        LOGI("NPU device info unavailable, falling back to CPU");
     }
     OH_AI_DeviceInfoHandle cpu = OH_AI_DeviceInfoCreate(OH_AI_DEVICETYPE_CPU);
     if (cpu == nullptr) {
@@ -97,7 +169,7 @@ static napi_value LoadModel(napi_env env, napi_callback_info info)
         OH_AI_ContextDestroy(&g_ctx);
         g_ctx = nullptr;
     }
-    if (!EnsureContext(2)) {
+    if (!EnsureContext(2, false)) {
         napi_value err = nullptr;
         napi_create_int32(env, -1000, &err);
         return err;
@@ -155,7 +227,7 @@ static napi_value LoadModelFromBuffer(napi_env env, napi_callback_info info)
         OH_AI_ContextDestroy(&g_ctx);
         g_ctx = nullptr;
     }
-    if (!EnsureContext(2)) {
+    if (!EnsureContext(2, false)) {
         napi_value err = nullptr;
         napi_create_int32(env, -1003, &err);
         return err;
@@ -185,7 +257,7 @@ static OH_AI_Status TryBuild(void *data, size_t len, const char *path, bool from
         OH_AI_ContextDestroy(&g_ctx);
         g_ctx = nullptr;
     }
-    if (!EnsureContext(threadNum)) {
+    if (!EnsureContext(threadNum, false)) {
         return OH_AI_STATUS_LITE_NULLPTR;
     }
     g_model = OH_AI_ModelCreate();
@@ -301,6 +373,87 @@ static napi_value AvailableAccelerators(napi_env env, napi_callback_info info)
     return res;
 }
 
+// Build the model with an explicit backend preference ("npu" or "cpu").
+// NPU build failure falls back to CPU automatically; the return value is the
+// first-attempt status (0 = success), and inferenceBackend() reports the final one.
+static napi_value LoadModelWithBackend(napi_env env, napi_callback_info info)
+{
+    size_t argc = 2;
+    napi_value argv[2] = {nullptr, nullptr};
+    napi_get_cb_info(env, info, &argc, argv, nullptr, nullptr);
+    void *data = nullptr;
+    size_t len = 0;
+    bool isAb = false;
+    napi_is_arraybuffer(env, argv[0], &isAb);
+    if (isAb) {
+        napi_get_arraybuffer_info(env, argv[0], &data, &len);
+    } else {
+        bool isTa = false;
+        napi_is_typedarray(env, argv[0], &isTa);
+        if (isTa) {
+            napi_typedarray_type type;
+            size_t length = 0;
+            void *td = nullptr;
+            napi_value ab = nullptr;
+            size_t offset = 0;
+            napi_get_typedarray_info(env, argv[0], &type, &length, &td, &ab, &offset);
+            data = td;
+            len = length;
+        }
+    }
+    std::string backend;
+    if (argc >= 2) {
+        GetStringArg(env, argv[1], &backend);
+    }
+    bool useNpu = (backend == "npu");
+    napi_value result = nullptr;
+    if (data == nullptr || len == 0) {
+        napi_create_int32(env, -1002, &result);
+        return result;
+    }
+    if (g_model != nullptr) {
+        OH_AI_ModelDestroy(&g_model);
+        g_model = nullptr;
+    }
+    if (g_ctx != nullptr) {
+        OH_AI_ContextDestroy(&g_ctx);
+        g_ctx = nullptr;
+    }
+    if (!EnsureContext(2, useNpu)) {
+        napi_create_int32(env, -1003, &result);
+        return result;
+    }
+    g_model = OH_AI_ModelCreate();
+    if (g_model == nullptr) {
+        napi_create_int32(env, -1003, &result);
+        return result;
+    }
+    OH_AI_Status st = OH_AI_ModelBuild(g_model, data, len, OH_AI_MODELTYPE_MINDIR, g_ctx);
+    LOGI("LoadModelWithBackend requested=%{public}s status=%{public}d actual=%{public}s",
+         backend.c_str(), static_cast<int>(st), g_backendDesc.c_str());
+    if (st == OH_AI_STATUS_SUCCESS) {
+        napi_create_int32(env, 0, &result);
+        return result;
+    }
+    // Fall back to CPU so the app stays usable; report the original failure.
+    OH_AI_ModelDestroy(&g_model);
+    g_model = nullptr;
+    OH_AI_ContextDestroy(&g_ctx);
+    g_ctx = nullptr;
+    if (!EnsureContext(2, false)) {
+        napi_create_int32(env, -1004, &result);
+        return result;
+    }
+    g_model = OH_AI_ModelCreate();
+    if (g_model != nullptr) {
+        OH_AI_Status st2 = OH_AI_ModelBuild(g_model, data, len, OH_AI_MODELTYPE_MINDIR, g_ctx);
+        LOGI("CPU fallback build status=%{public}d actual=%{public}s",
+             static_cast<int>(st2), g_backendDesc.c_str());
+    }
+    napi_create_int32(env, static_cast<int32_t>(st), &result);
+    return result;
+}
+
 static napi_value Predict(napi_env env, napi_callback_info info)
 {
     size_t argc = 2;
@@ -376,6 +529,7 @@ static napi_value Init(napi_env env, napi_value exports)
     napi_property_descriptor desc[] = {
         {"loadModel", nullptr, LoadModel, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"loadModelFromBuffer", nullptr, LoadModelFromBuffer, nullptr, nullptr, nullptr, napi_default, nullptr},
+        {"loadModelWithBackend", nullptr, LoadModelWithBackend, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"diagnose", nullptr, Diagnose, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"inferenceBackend", nullptr, InferenceBackend, nullptr, nullptr, nullptr, napi_default, nullptr},
         {"availableAccelerators", nullptr, AvailableAccelerators, nullptr, nullptr, nullptr, napi_default, nullptr},

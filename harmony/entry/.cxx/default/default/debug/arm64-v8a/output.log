@@ -1,11 +1,2 @@
 ninja: Entering directory `C:\Users\mu\Desktop\code\model\harmony-risk-guard\harmony\entry\.cxx\default\default\debug\arm64-v8a'
-[1/2] Building CXX object CMakeFiles/riskguard_native.dir/riskguard_native.cpp.o
-clang++: warning: argument unused during compilation: '--gcc-toolchain=C:/Program Files/Huawei/DevEco Studio/sdk/default/openharmony/native/llvm' [-Wunused-command-line-argument]
-C:/Users/mu/Desktop/code/model/harmony-risk-guard/harmony/entry/src/main/cpp/riskguard_native.cpp:14:9: warning: 'LOG_TAG' macro redefined [-Wmacro-redefined]
-#define LOG_TAG "RiskGuardNative"
-        ^
-C:/Program Files/Huawei/DevEco Studio/sdk/default/openharmony/native/sysroot/usr/include/hilog/log.h:92:9: note: previous definition is here
-#define LOG_TAG NULL
-        ^
-1 warning generated.
-[2/2] Linking CXX shared library C:\Users\mu\Desktop\code\model\harmony-risk-guard\harmony\entry\build\default\intermediates\cmake\default\obj\arm64-v8a\libriskguard_native.so
+ninja: no work to do.
